@@ -1,5 +1,9 @@
+*.bin
+
 # Prerequisites
 *.d
+
+
 
 # Object files
 *.o
@@ -18,7 +22,6 @@
 
 # Libraries
 *.lib
-*.a
 *.la
 *.lo
 
