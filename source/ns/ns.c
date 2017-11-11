@@ -7,7 +7,6 @@
 #include <errno.h>
 #include "fastlz.h"
 #include "jpeglib.h"
-#include "gen.h"
 
 NS_CONTEXT* g_nsCtx = 0;
 NS_CONFIG* g_nsConfig;
@@ -287,7 +286,7 @@ int getBppForFormat(int format) {
 typedef struct _BLIT_CONTEXT {
 	int width, height, format, src_pitch;
 	int x, y;
-	u8* src;	
+	u8* src;
 	int outformat, bpp;
 	u32 bytesInColumn ;
 	u32 blankInColumn;
@@ -459,7 +458,7 @@ void rpCompressAndSendPacket(BLIT_CONTEXT* ctx) {
 	dataBuf[1] = ctx->isTop;
 	dataBuf[2] = 2;
 	dataBuf[3] = 0;
-	
+
 	cinfo.image_width = ctx->height;      /* image width and height, in pixels */
 	cinfo.image_height = ctx->width;
 	cinfo.input_components = 3;
@@ -533,7 +532,7 @@ int remotePlayBlit(BLIT_CONTEXT* ctx) {
 			}
 		}
 		else {
-			
+
 			while (ctx->y < height) {
 				if (dp - dataBuf >= PACKET_SIZE) {
 					return dp - dataBuf;
@@ -673,7 +672,7 @@ void rpCaptureScreen(int isTop) {
 	rpHDma[isTop] = 0;
 
 	if (isInVRAM(phys)) {
-		svc_startInterProcessDma(&rpHDma[isTop], CURRENT_PROCESS_HANDLE, 
+		svc_startInterProcessDma(&rpHDma[isTop], CURRENT_PROCESS_HANDLE,
 			dest, hProcess, 0x1F000000 + (phys - 0x18000000), bufSize, dmaConfig);
 		return;
 	}
@@ -871,8 +870,8 @@ int nsHandleRemotePlay() {
 	NS_PACKET* pac = &(g_nsCtx->packetBuf);
 	u32 mode = pac->args[0];
 	u32 quality = pac->args[1];
-	u32 qosValue = pac->args[2];	
-	
+	u32 qosValue = pac->args[2];
+
 	if (!((quality >= 10) && (quality <= 100))) {
 		nsDbgPrint("illegal quality\n");
 		goto final;
