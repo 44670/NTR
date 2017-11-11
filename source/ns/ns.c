@@ -1826,7 +1826,7 @@ void nsInitDebug() {
 	g_nsConfig->debugReady = 1;
 }
 
-void nsInit(u32 initType) {
+void nsInit() {
 	u32 socuSharedBufferSize;
 	u32 bufferSize;
 	u32 ret, outAddr;
@@ -1918,5 +1918,4 @@ void nsInit(u32 initType) {
 		showDbg("svc_createThread failed: %08x", ret, 0);
 		return;
 	}
-
 }

@@ -122,10 +122,10 @@ u16 rtIntToPortNumber(u16 x) {
 }
 
 u32 rtGetFileSize(u8* fileName) {
-	u32 hFile, size, ret;
-	u64 size64 ;
+	u32 hFile, size = 0, ret;
+	u64 size64 = 0;
 
-	FS_path testPath = (FS_path){PATH_CHAR, strlen(fileName) + 1, fileName};
+	FS_path testPath = (FS_path){PATH_CHAR, strlen((const char*) fileName) + 1, fileName};
 	ret = FSUSER_OpenFileDirectly(fsUserHandle, &hFile, sdmcArchive, testPath, 7, 0);
 	if (ret != 0) {
 		nsDbgPrint("openFile failed: %08x\n", ret, 0);
@@ -137,7 +137,7 @@ u32 rtGetFileSize(u8* fileName) {
 		nsDbgPrint("FSFILE_GetSize failed: %08x\n", ret, 0);
 		goto final;
 	}
-	size = size64;
+	size = (u32) size64;
 
 final:
 	if (hFile != 0) {
@@ -155,7 +155,7 @@ u32 rtLoadFileToBuffer(u8* fileName, u32* pBuf, u32 bufSize) {
 	u64 size64;
 	u32 tmp;
 	
-	FS_path testPath = (FS_path){PATH_CHAR, strlen(fileName) + 1, fileName};
+	FS_path testPath = (FS_path){PATH_CHAR, strlen((const char*) fileName) + 1, fileName};
 	ret = FSUSER_OpenFileDirectly(fsUserHandle, &hFile, sdmcArchive, testPath, 7, 0);
 	if (ret != 0) {
 		nsDbgPrint("openFile failed: %08x\n", ret, 0);
@@ -169,7 +169,7 @@ u32 rtLoadFileToBuffer(u8* fileName, u32* pBuf, u32 bufSize) {
 		goto final;
 	}
 
-	size = size64;
+	size = (u32) size64;
 	/*
 	if (bufSize == 0) {
 		ret = svc_controlMemory((u32*)&outAddr, 0, 0, size , 0x10003, 3);
@@ -234,7 +234,7 @@ u32 rtGenerateJumpCodeThumbR3(u32 src, u32 dst, u32* buf) {
 }
 
 void rtInitHook(RT_HOOK* hook, u32 funcAddr, u32 callbackAddr) {
-	hook->model = 0;
+	hook->model = 0; 
 	hook->isEnabled = 0;
 	hook->funcAddr = funcAddr;
 

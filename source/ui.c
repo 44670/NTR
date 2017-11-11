@@ -12,7 +12,7 @@ u32 hGSPProcess = 0;
 
 
 int builtinDrawString(u8* str, int x, int y, char r, char g, char b, int newLine) {
-	int len = strlen(str);
+	int len = strlen((const char*) str);
 	int i, chWidth, currentX = x, totalLen = 0;
 
 	for (i = 0; i < len; i++) {

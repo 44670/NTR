@@ -6,6 +6,7 @@
 u32 nsDefaultMemRegion = 0x200;
 
 void sleep(s64 ns);
+void nsInit();
 
 u32* threadStack = 0;
 NTR_CONFIG backupNtrConfig = { 0 };

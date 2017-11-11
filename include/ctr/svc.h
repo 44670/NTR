@@ -37,6 +37,7 @@ typedef enum{
 	Result svc_createThread(Handle* thread, ThreadFunc entrypoint, u32 arg, u32* stacktop, s32 threadpriority, s32 processorid);
 	void svc_exitThread();
 	void svc_sleepThread(s64 ns);
+	Result svc_openThread(Handle* thread, Handle process, u32 threadId);
 	Result svc_createMutex(Handle* mutex, bool initialLocked);
 	Result svc_releaseMutex(Handle handle);
 	Result svc_releaseSemaphore(s32* count, Handle semaphore, s32 releaseCount);
