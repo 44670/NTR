@@ -25,13 +25,17 @@ INCLUDES	:=	include include/jpeg
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
-ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft -O3
+ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 
 CFLAGS	:=	-Wall \
 			-fomit-frame-pointer -ffunction-sections -fdata-sections \
 			$(ARCH)
 
-CFLAGS	+=	$(INCLUDE) -DHAS_JPEG=1
+ifeq ($(strip $(NEW_3DS)),1)
+CFLAGS += $(INCLUDE) -DHAS_JPEG=1 -O3
+else
+CFLAGS += $(INCLUDE) -Os
+endif
 
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 
@@ -95,7 +99,7 @@ export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
 
 export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 
-.PHONY: $(BUILD) clean all
+.PHONY: $(BUILD) clean all old_3ds new_3ds both
 
 #---------------------------------------------------------------------------------
 all: $(BUILD)
@@ -108,6 +112,18 @@ $(BUILD):
 clean:
 	@echo clean ...
 	@rm -fr $(BUILD) $(TARGET).bin $(TARGET).elf
+
+old_3ds:
+	@echo making ntr_payload for old_3ds ...
+	@$(MAKE) NEW_3DS=0
+
+new_3ds:
+	@echo making ntr_payload for new_3ds ...
+	@$(MAKE) NEW_3DS=1
+
+both: old_3ds new_3ds
+	
+
 
 
 #---------------------------------------------------------------------------------
