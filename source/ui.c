@@ -122,10 +122,6 @@ void updateScreen() {
 	svc_flushProcessDataCache(0xffff8001, BOTTOM_FRAME1, BOTTOM_FRAME_SIZE);
 }
 
-s32 showMenu(u8* title, u32 entryCount, u8* captions[]) {
-	return showMenuEx(title, entryCount, captions, 0, 0);
-}
-
 s32 showMenuEx(u8* title, u32 entryCount, u8* captions[], u8* descriptions[],  u32 selectOn) {
 	u32 maxCaptions = 10;
 	u32 i;
@@ -182,6 +178,10 @@ s32 showMenuEx(u8* title, u32 entryCount, u8* captions[], u8* descriptions[],  u
 			return -1;
 		}
 	}
+}
+
+s32 showMenu(u8* title, u32 entryCount, u8* captions[]) {
+	return showMenuEx(title, entryCount, captions, 0, 0);
 }
 
 int showMsgNoPause(u8* msg) {

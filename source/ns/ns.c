@@ -1472,14 +1472,14 @@ u32 nsGetPCToAttachProcess(u32 hProcess) {
 }
 
 void nsHandleListThread() {
-	u32 handle, ret;
+	u32 handle, ret = 0;
 	NS_PACKET* pac = &(g_nsCtx->packetBuf);
 	Handle hProcess;
 	u32 pid = pac->args[0];
 	u32 tids[100];
 	u32 tidCount, i, j;
 	u32 ctx[400];
-	u32 hThread;
+	u32 hThread = 0;
 	u32 pKThread;
 	u32 pContext;
 
