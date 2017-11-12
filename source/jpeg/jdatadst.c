@@ -69,7 +69,7 @@ typedef my_mem_destination_mgr *my_mem_dest_ptr;
 METHODDEF(void)
 init_destination(j_compress_ptr cinfo)
 {
-	showDbg("init_destination", 0, 0);
+	showDbg((u8*) "init_destination", 0, 0);
 	my_dest_ptr dest = (my_dest_ptr) cinfo->dest;
 
 	/* Allocate the output buffer --- it will be released when done with image */

@@ -151,7 +151,7 @@ final:
 
 u32 rtLoadFileToBuffer(u8* fileName, u32* pBuf, u32 bufSize) {
 	u32 ret;
-	u32 hFile, size;
+	u32 hFile, size = 0;
 	u64 size64;
 	u32 tmp;
 	

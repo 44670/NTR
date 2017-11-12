@@ -2,7 +2,7 @@
 #define SRV_H
 
 Result initSrv();
-Result exitSrv();
+void exitSrv();
 Result srv_RegisterClient(Handle* handleptr);
 Result srv_getServiceHandle(Handle* handleptr, Handle* out, char* server);
 

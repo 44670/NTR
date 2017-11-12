@@ -647,7 +647,8 @@ RT_HOOK	aptPrepareToStartApplicationHook;
 typedef u32(*aptPrepareToStartApplicationTypeDef) (u32 a1, u32 a2, u32 a3);
 
 u32 aptPrepareToStartApplicationCallback(u32 a1, u32 a2, u32 a3) {
-	u32* tid = (u32*) a1;
+	volatile uintptr_t temp = a1;
+	u32* tid = (u32*) temp;
 	nsDbgPrint("starting app: %08x%08x\n", tid[1], tid[0]);
 	plgStartPluginLoad();
 	plgLoadPluginsFromDirectory((u8*) "game");
@@ -732,7 +733,8 @@ void plgInitFromInjectHOME() {
 	arm11BinStart = base;
 	base += arm11BinSize;
 	if (arm11BinSize > 32) {
-		u32* bootArgs = (u32*) (arm11BinStart + 4);
+		volatile uintptr_t temp = (arm11BinStart + 4);
+		u32* bootArgs = (u32*) temp;
 		bootArgs[0] = 1;
 	}
 
