@@ -36,7 +36,7 @@ CFLAGS	+=	$(INCLUDE) -DHAS_JPEG=1
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 
 ASFLAGS	:=	-g $(ARCH)
-LDFLAGS	=	-nostartfiles -T$(TOPDIR)/3ds.ld -g $(ARCH) -Wl,--gc-sections -Wl,-Map,$(notdir $*.map)
+LDFLAGS	=	-pie -nostartfiles -T$(TOPDIR)/3ds.ld -g $(ARCH) -Wl,--gc-sections -Wl,-Map,$(notdir $*.map)
 
 LIBS	:= -lm
 
