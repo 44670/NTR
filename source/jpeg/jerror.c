@@ -110,7 +110,7 @@ output_message (j_common_ptr cinfo)
              MB_OK | MB_ICONERROR);
 #else
   /* Send it to stderr, adding a newline */
-  nsDbgPrint("%s\n", buffer);
+  nsDbgPrint((const char*) "%s\n", buffer);
   showDbg((u8*) "%s\n", (u32) buffer, 0);
 #endif
 }

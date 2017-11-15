@@ -214,7 +214,7 @@ u32 HomeFSReadCallback(u32 a1, u32 a2, u32 a3, u32 a4, u32 buffer, u32 size) {
 	ret = ((FSReadTypeDef)((void*)HomeFSReadHook.callCode))(a1, a2, a3, a4, buffer, size);
 	if (size == 0x36C0) {
 		if ((*((u32*)(buffer))) == 0x48444d53) { // 'SMDH'
-			nsDbgPrint("patching smdh\n");
+			nsDbgPrint((const char*) "patching smdh\n");
 			*((u32*)(buffer + 0x2018)) = 0x7fffffff;
 		}
 	}
@@ -249,7 +249,7 @@ void magicKillProcess(u32 pid) {
 	u32 KProcess = kGetKProcessByHandle(hProcess);
 	u32 t = 0;
 	kmemcpy(&t, (void*) (KProcess + 4), 4);
-	//showDbg("refcount: %08x", t, 0);
+	//showDbg((u8*) "refcount: %08x", t, 0);
 	t = 1;
 	volatile uintptr_t temp = (KProcess + 4);
 	void* vPtr = (void*) temp;
@@ -466,7 +466,7 @@ void initFromSoc() {
 
 int main() {
 	StartMode = _BootArgs[0];
-	//showDbg("", 0, sizeof(NS_CONFIG));
+	//showDbg((u8*) "", 0, sizeof(NS_CONFIG));
 	if (StartMode == 0) {
 		// load from bootNTR
 		if (_BootArgs[1] == 0xb00d) {

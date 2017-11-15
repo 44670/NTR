@@ -364,11 +364,11 @@ u32 plgEnsurePoolEnd(u32 end) {
 	if (end <= plgPoolEnd) {
 		return 0;
 	}
-	nsDbgPrint("expand pool addr: %08x, size: %08x\n", addr, size);
+	nsDbgPrint((const char*) "expand pool addr: %08x, size: %08x\n", addr, size);
 	ret = controlMemoryInSysRegion(&outAddr, addr, addr, size, NS_DEFAULT_MEM_REGION + 3, 3);
 	if (ret != 0) {
 		if (rtCheckRemoteMemoryRegionSafeForWrite(0xffff8001, addr, size) != 0) {
-			nsDbgPrint("alloc plg memory failed: %08x\n", ret);
+			nsDbgPrint((const char*) "alloc plg memory failed: %08x\n", ret);
 			return ret;
 		}
 	}
@@ -388,9 +388,9 @@ void tryInitFS() {
 	srv_getServiceHandle(0, &fsUserHandle, "fs:REG");
 	ret = FSUSER_Initialize(fsUserHandle);
 	if (ret != 0) {
-		nsDbgPrint("FSUSER_Initialize failed: %08x\n", ret);
+		nsDbgPrint((const char*) "FSUSER_Initialize failed: %08x\n", ret);
 	}
-	nsDbgPrint("fsUserHandle: %08x\n", fsUserHandle);
+	nsDbgPrint((const char*) "fsUserHandle: %08x\n", fsUserHandle);
 }
 
 u32 plgLoadPluginToRemoteProcess(u32 hProcess) {
@@ -408,25 +408,25 @@ u32 plgLoadPluginToRemoteProcess(u32 hProcess) {
 		ret = svc_openProcess(&hMenuProcess, ntrConfig->HomeMenuPid);
 		if (ret != 0) {
 			hMenuProcess = 0;
-			nsDbgPrint("open menu process failed: %08x\n", ret);
+			nsDbgPrint((const char*) "open menu process failed: %08x\n", ret);
 			return ret;
 		}
 	}
-	nsDbgPrint("hMenuProcess:%08x\n", hMenuProcess);
+	nsDbgPrint((const char*) "hMenuProcess:%08x\n", hMenuProcess);
 
 	memset(&cfg, 0, sizeof(NS_CONFIG));
 	ret = copyRemoteMemory(0xffff8001, &plgInfo, hMenuProcess, (void*) plgPoolStart, sizeof(PLGLOADER_INFO));
 	if (ret != 0) {
-		nsDbgPrint("load plginfo failed:%08x\n", ret);
+		nsDbgPrint((const char*) "load plginfo failed:%08x\n", ret);
 		return ret;
 	}
 
 	getProcessTIDByHandle(hProcess, procTid);
 
 
-	nsDbgPrint("procTid: %08x%08x\n", procTid[1], procTid[0]);
+	nsDbgPrint((const char*) "procTid: %08x%08x\n", procTid[1], procTid[0]);
 	if (!((procTid[0] == plgInfo.tid[0]) && (procTid[1] == plgInfo.tid[1]))) {
-		nsDbgPrint("tid mismatch\n");
+		nsDbgPrint((const char*) "tid mismatch\n");
 		return -1;
 	}
 	u32 pid = 0;
@@ -466,31 +466,31 @@ u32 plgLoadPluginToRemoteProcess(u32 hProcess) {
 	ret = mapRemoteMemoryInSysRegion(hProcess, plgPoolStart, totalSize);
 
 	if (ret != 0) {
-		nsDbgPrint("alloc plugin memory failed: %08x\n", ret);
+		nsDbgPrint((const char*) "alloc plugin memory failed: %08x\n", ret);
 		return ret;
 	}
 	ret = rtCheckRemoteMemoryRegionSafeForWrite(hProcess, plgPoolStart, totalSize);
 	if (ret != 0) {
-		nsDbgPrint("rwx failed: %08x\n", ret);
+		nsDbgPrint((const char*) "rwx failed: %08x\n", ret);
 		return ret;
 	}
 	ret = copyRemoteMemory(hProcess, (void*) plgPoolStart, 0xffff8001, &targetPlgInfo, sizeof(PLGLOADER_INFO));
 	if (ret != 0) {
-		nsDbgPrint("copy plginfo failed: %08x\n", ret);
+		nsDbgPrint((const char*) "copy plginfo failed: %08x\n", ret);
 		return ret;
 	}
 	for (i = 0; i < targetPlgInfo.plgCount; i++) {
 		ret = copyRemoteMemory(hProcess, (void*) targetPlgInfo.plgBufferPtr[i], hMenuProcess, (void*) plgInfo.plgBufferPtr[i],
 			targetPlgInfo.plgSize[i]);
 		if (ret != 0) {
-			nsDbgPrint("load plg failed: %08x\n", ret);
+			nsDbgPrint((const char*) "load plg failed: %08x\n", ret);
 			return ret;
 		}
 	}
 
 	ret = nsAttachProcess(hProcess, 0x00100000, &cfg, 1);
 	if (ret != 0) {
-		nsDbgPrint("attach process failed: %08x\n", ret);
+		nsDbgPrint((const char*) "attach process failed: %08x\n", ret);
 		return ret;
 	}
 	return 0;
@@ -503,7 +503,7 @@ u32 svc_RunCallback(Handle hProcess, u32* startInfo) {
 	plgLoadPluginToRemoteProcess(hProcess);
 	/*
 	ret = copyRemoteMemory(hProcess, 0x00100000, 0xffff8001, buf,  sizeof(buf));
-	nsDbgPrint("copyRemoteMemory ret: %08x\n", ret);*/
+	nsDbgPrint((const char*) "copyRemoteMemory ret: %08x\n", ret);*/
 
 	//Unused label
 	//final:
@@ -534,7 +534,7 @@ u32 plgListPlugins(u32* entries, u8* buf, u8* path) {
 
 	ret = FSUSER_OpenDirectory(fsUserHandle, &dirHandle, plgSdmcArchive, dirPath);
 	if (ret != 0) {
-		nsDbgPrint("FSUSER_OpenDirectory failed, ret=%08x", ret);
+		nsDbgPrint((const char*) "FSUSER_OpenDirectory failed, ret=%08x", ret);
 		return 0;
 	}
 	while (1) {
@@ -622,15 +622,15 @@ u32 plgLoadPluginsFromDirectory(u8* dir) {
 		xsprintf((char*) pluginPath, "%s/%s", path, entries[i]);
 
 		bufSize = rtAlignToPageSize(rtGetFileSize(pluginPath));
-		nsDbgPrint("loading plugin: %s, size: %08x, addr: %08x\n", pluginPath, bufSize, plgNextLoadAddr);
+		nsDbgPrint((const char*) "loading plugin: %s, size: %08x, addr: %08x\n", pluginPath, bufSize, plgNextLoadAddr);
 		ret = plgEnsurePoolEnd(plgNextLoadAddr + bufSize);
 		if (ret != 0) {
-			nsDbgPrint("alloc plugin memory failed\n");
+			nsDbgPrint((const char*) "alloc plugin memory failed\n");
 			continue;
 		}
 		ret = rtLoadFileToBuffer(pluginPath, (u32*) plgNextLoadAddr, bufSize);
 		if (ret == 0) {
-			nsDbgPrint("rtLoadFileToBuffer failed\n");
+			nsDbgPrint((const char*) "rtLoadFileToBuffer failed\n");
 			continue;
 		}
 		g_plgInfo->plgBufferPtr[g_plgInfo->plgCount] = plgNextLoadAddr;
@@ -649,7 +649,7 @@ typedef u32(*aptPrepareToStartApplicationTypeDef) (u32 a1, u32 a2, u32 a3);
 u32 aptPrepareToStartApplicationCallback(u32 a1, u32 a2, u32 a3) {
 	volatile uintptr_t temp = a1;
 	u32* tid = (u32*) temp;
-	nsDbgPrint("starting app: %08x%08x\n", tid[1], tid[0]);
+	nsDbgPrint((const char*) "starting app: %08x%08x\n", tid[1], tid[0]);
 	plgStartPluginLoad();
 	plgLoadPluginsFromDirectory((u8*) "game");
 	u8 buf[32];
@@ -674,7 +674,7 @@ void injectPM() {
 	cfg.startupCommand = NS_STARTCMD_INJECTPM;
 	ret = svc_openProcess(&hProcess, pid);
 	if (ret != 0) {
-		nsDbgPrint("openProcess failed: %08x\n", ret, 0);
+		nsDbgPrint((const char*) "openProcess failed: %08x\n", ret, 0);
 		hProcess = 0;
 		goto final;
 	}
@@ -691,11 +691,11 @@ void startHomePlugin() {
 	totalSize = plgNextLoadAddr - plgLoadStart;
 	u32 ret = rtCheckRemoteMemoryRegionSafeForWrite(getCurrentProcessHandle(), plgLoadStart, totalSize);
 	if (ret != 0) {
-		nsDbgPrint("rwx failed: %08x\n", ret);
+		nsDbgPrint((const char*) "rwx failed: %08x\n", ret);
 		return;
 	}
 	for (i = 0; i < g_plgInfo->plgCount; i++) {
-		nsDbgPrint("plg: %08x\n", g_plgInfo->plgBufferPtr[i]);
+		nsDbgPrint((const char*) "plg: %08x\n", g_plgInfo->plgBufferPtr[i]);
 		((funcType) (g_plgInfo->plgBufferPtr[i]))();
 	}
 }
@@ -711,7 +711,7 @@ void plgInitFromInjectHOME() {
 	plgSdmcArchive = (FS_archive) { 9, (FS_path) { PATH_EMPTY, 1, (u8*)"" } };
 	ret = FSUSER_OpenArchive(fsUserHandle, &plgSdmcArchive);
 	if (ret != 0) {
-		nsDbgPrint("FSUSER_OpenArchive failed: %08x\n", ret);
+		nsDbgPrint((const char*) "FSUSER_OpenArchive failed: %08x\n", ret);
 		return;
 	}
 	g_plgInfo = (PLGLOADER_INFO*) base;
@@ -720,14 +720,14 @@ void plgInitFromInjectHOME() {
 	u8* arm11BinPath = (u8*) ntrConfig->ntrFilePath;
 
 	arm11BinSize = rtAlignToPageSize(rtGetFileSize(arm11BinPath));
-	nsDbgPrint("arm11 bin size: %08x\n", arm11BinSize);
+	nsDbgPrint((const char*) "arm11 bin size: %08x\n", arm11BinSize);
 	ret = plgEnsurePoolEnd(base + arm11BinSize);
 	if (ret != 0) {
-		nsDbgPrint("alloc memory for arm11bin failed\n");
+		nsDbgPrint((const char*) "alloc memory for arm11bin failed\n");
 	}
 	ret = rtLoadFileToBuffer(arm11BinPath, (u32*) base, arm11BinSize);
 	if (ret == 0) {
-		nsDbgPrint("load arm11bin failed\n");
+		nsDbgPrint((const char*) "load arm11bin failed\n");
 		return;
 	}
 	arm11BinStart = base;
@@ -899,7 +899,7 @@ void plgInitScreenOverlay() {
 	if (rtCheckRemoteMemoryRegionSafeForWrite(getCurrentProcessHandle(), 0x1F000000, 0x00600000) == 0) {
 		isVRAMAccessible = 1;
 	}
-	nsDbgPrint("vram accessible: %d\n", isVRAMAccessible);
+	nsDbgPrint((const char*) "vram accessible: %d\n", isVRAMAccessible);
 
 	static u32 pat[] = { 0xe1833000, 0xe2044cff, 0xe3c33cff, 0xe1833004, 0xe1824f93 };
 	static u32 pat2[] = { 0xe8830e60, 0xee078f9a, 0xe3a03001, 0xe7902104 };
@@ -914,7 +914,7 @@ void plgInitScreenOverlay() {
 		addr = plgSearchBytes(0x00100000, 0, pat3, sizeof(pat3));
 		fp = plgSearchReverse(addr, addr - 0x400, 0xe92d47f0);
 	}
-	nsDbgPrint("overlay addr: %08x, %08x\n", addr, fp);
+	nsDbgPrint((const char*) "overlay addr: %08x, %08x\n", addr, fp);
 
 	if (!fp) {
 
@@ -939,7 +939,7 @@ void initFromInjectGame() {
 		plgInitScreenOverlay();
 	}
 	for (i = 0; i < g_plgInfo->plgCount; i++) {
-		nsDbgPrint("plg: %08x\n", g_plgInfo->plgBufferPtr[i]);
+		nsDbgPrint((const char*) "plg: %08x\n", g_plgInfo->plgBufferPtr[i]);
 		((funcType) (g_plgInfo->plgBufferPtr[i]))();
 	}
 }

@@ -128,13 +128,13 @@ u32 rtGetFileSize(u8* fileName) {
 	FS_path testPath = (FS_path){PATH_CHAR, strlen((const char*) fileName) + 1, fileName};
 	ret = FSUSER_OpenFileDirectly(fsUserHandle, &hFile, sdmcArchive, testPath, 7, 0);
 	if (ret != 0) {
-		nsDbgPrint("openFile failed: %08x\n", ret, 0);
+		nsDbgPrint((const char*) "openFile failed: %08x\n", ret, 0);
 		hFile = 0;
 		goto final;
 	}
 	ret = FSFILE_GetSize(hFile, &size64);
 	if (ret != 0) {
-		nsDbgPrint("FSFILE_GetSize failed: %08x\n", ret, 0);
+		nsDbgPrint((const char*) "FSFILE_GetSize failed: %08x\n", ret, 0);
 		goto final;
 	}
 	size = (u32) size64;
@@ -158,14 +158,14 @@ u32 rtLoadFileToBuffer(u8* fileName, u32* pBuf, u32 bufSize) {
 	FS_path testPath = (FS_path){PATH_CHAR, strlen((const char*) fileName) + 1, fileName};
 	ret = FSUSER_OpenFileDirectly(fsUserHandle, &hFile, sdmcArchive, testPath, 7, 0);
 	if (ret != 0) {
-		nsDbgPrint("openFile failed: %08x\n", ret, 0);
+		nsDbgPrint((const char*) "openFile failed: %08x\n", ret, 0);
 		hFile = 0;
 		goto final;
 	}
 	
 	ret = FSFILE_GetSize(hFile, &size64);
 	if (ret != 0) {
-		nsDbgPrint("FSFILE_GetSize failed: %08x\n", ret, 0);
+		nsDbgPrint((const char*) "FSFILE_GetSize failed: %08x\n", ret, 0);
 		goto final;
 	}
 
@@ -174,21 +174,21 @@ u32 rtLoadFileToBuffer(u8* fileName, u32* pBuf, u32 bufSize) {
 	if (bufSize == 0) {
 		ret = svc_controlMemory((u32*)&outAddr, 0, 0, size , 0x10003, 3);
 		if(ret != 0) {
-			nsDbgPrint("svc_controlMemory failed: %08x\n", ret, 0);
+			nsDbgPrint((const char*) "svc_controlMemory failed: %08x\n", ret, 0);
 			goto final;
 		}
 		*ppBuf = (u32*)outAddr;
 	}*/
 
 	if (bufSize < size) {
-		nsDbgPrint("rtLoadFileToBuffer: buffer too small\n");
+		nsDbgPrint((const char*) "rtLoadFileToBuffer: buffer too small\n");
 		ret = -1;
 		goto final;
 	}
 
 	ret = FSFILE_Read(hFile, &tmp, 0, (u32*)pBuf, size);
 	if(ret != 0) {
-		nsDbgPrint("FSFILE_Read failed: %08x\n", ret, 0);
+		nsDbgPrint((const char*) "FSFILE_Read failed: %08x\n", ret, 0);
 		goto final;
 	}
 
@@ -210,7 +210,7 @@ u32 rtGetThreadReg(Handle hProcess, u32 tid, u32* ctx) {
 	
 	ret = svc_openThread(&hThread, hProcess, tid);
 	if (ret != 0) {
-		nsDbgPrint("openThread failed: %08x\n", ret, 0);
+		nsDbgPrint((const char*) "openThread failed: %08x\n", ret, 0);
 		return ret;
 	}
 	pKThread = kGetKProcessByHandle(hThread);
