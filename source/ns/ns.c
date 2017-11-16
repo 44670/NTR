@@ -11,7 +11,6 @@
 NS_CONTEXT* g_nsCtx = 0;
 NS_CONFIG* g_nsConfig;
 
-
 u32 heapStart, heapEnd;
 
 void disp(u32 t, u32 cl);
@@ -54,7 +53,7 @@ u64 rpMinIntervalBetweenPacketsInTick = 0;
 
 
 
-void*  rpMalloc( u32 size)
+void*  rpMalloc(u32 size)
 
 {
 	void* ret = rpAllocBuff + rpAllocBuffOffset;
@@ -98,7 +97,7 @@ void nsDbgPutc(char ch) {
 void nsDbgPrint(			/* Put a formatted string to the default device */
 	const char*	fmt,	/* Pointer to the format string */
 	...					/* Optional arguments */
-	)
+)
 {
 	va_list arp;
 
@@ -147,41 +146,41 @@ void allocImageBuf();
 
 /*
 void remotePlayMain2() {
-int udp_sock = socket(AF_INET, SOCK_DGRAM, 0);
-struct sockaddr_in addr;
-int ret, i;
+	int udp_sock = socket(AF_INET, SOCK_DGRAM, 0);
+	struct sockaddr_in addr;
+	int ret, i;
 
-if (udp_sock < 0) {
-nsDbgPrint((const char*) "socket failed: %d", udp_sock);
-return;
-}
-addr.sin_family = AF_INET;
-addr.sin_port = rtIntToPortNumber(9001);
-addr.sin_addr.s_addr = 0x6602a8c0;  // __builtin_bswap32(0xc0a80266);
+	if (udp_sock < 0) {
+		nsDbgPrint((const char*) "socket failed: %d", udp_sock);
+		return;
+	}
+	addr.sin_family = AF_INET;
+	addr.sin_port = rtIntToPortNumber(9001);
+	addr.sin_addr.s_addr = 0x6602a8c0;  // __builtin_bswap32(0xc0a80266);
 
-nsDbgPrint((const char*) "bind done 22");
-allocImageBuf();
-while (1) {
-ret = sendto(udp_sock, image_buf, 1300, 0, &addr, sizeof(addr));
-}
+	nsDbgPrint((const char*) "bind done 22");
+	allocImageBuf();
+	while (1) {
+		ret = sendto(udp_sock, image_buf, 1300, 0, &addr, sizeof(addr));
+	}
 
-final:
-closesocket(udp_sock);
+	final:
+	closesocket(udp_sock);
 }
 
 
 u32 nwmSocPutFrameRaw(Handle handle, u8* frame, u32 size) {
-u32* cmdbuf = getThreadCommandBuffer();
-u32 ret;
-cmdbuf[0] = 0x10042;
-cmdbuf[1] = size;
-cmdbuf[2] = (((u32)size) << 14) | 2;
-cmdbuf[3] = frame;
-ret = svc_sendSyncRequest(handle);
-if (ret != 0) {
-return ret;
-}
-return cmdbuf[1];
+	u32* cmdbuf = getThreadCommandBuffer();
+	u32 ret;
+	cmdbuf[0] = 0x10042;
+	cmdbuf[1] = size;
+	cmdbuf[2] = (((u32)size) << 14) | 2;
+	cmdbuf[3] = frame;
+	ret = svc_sendSyncRequest(handle);
+	if (ret != 0) {
+		return ret;
+	}
+	return cmdbuf[1];
 }*/
 
 RT_HOOK nwmValParamHook;
@@ -210,7 +209,7 @@ sendPacketTypedef nwmSendPacket = 0;
 
 uint16_t ip_checksum(void* vdata, size_t length) {
 	// Cast the data pointer to one that can be indexed.
-	char* data = (char*)vdata;
+	char* data = (char*) vdata;
 	size_t i;
 	// Initialise the accumulator.
 	uint32_t acc = 0xffff;
@@ -241,21 +240,21 @@ uint16_t ip_checksum(void* vdata, size_t length) {
 
 int	initUDPPacket(int dataLen) {
 	dataLen += 8;
-	*(u16*)(remotePlayBuffer + 0x22 + 8) = htons(8000); // src port
-	*(u16*)(remotePlayBuffer + 0x24 + 8) = htons(8001); // dest port
-	*(u16*)(remotePlayBuffer + 0x26 + 8) = htons(dataLen);
-	*(u16*)(remotePlayBuffer + 0x28 + 8) = 0; // no checksum
+	*(u16*) (remotePlayBuffer + 0x22 + 8) = htons(8000); // src port
+	*(u16*) (remotePlayBuffer + 0x24 + 8) = htons(8001); // dest port
+	*(u16*) (remotePlayBuffer + 0x26 + 8) = htons(dataLen);
+	*(u16*) (remotePlayBuffer + 0x28 + 8) = 0; // no checksum
 	dataLen += 20;
 
-	*(u16*)(remotePlayBuffer + 0x10 + 8) = htons(dataLen);
-	*(u16*)(remotePlayBuffer + 0x12 + 8) = 0xaf01; // packet id is a random value since we won't use the fragment
-	*(u16*)(remotePlayBuffer + 0x14 + 8) = 0x0040; // no fragment
-	*(u16*)(remotePlayBuffer + 0x16 + 8) = 0x1140; // ttl 64, udp
-	*(u16*)(remotePlayBuffer + 0x18 + 8) = 0;
-	*(u16*)(remotePlayBuffer + 0x18 + 8) = ip_checksum(remotePlayBuffer + 0xE + 8, 0x14);
+	*(u16*) (remotePlayBuffer + 0x10 + 8) = htons(dataLen);
+	*(u16*) (remotePlayBuffer + 0x12 + 8) = 0xaf01; // packet id is a random value since we won't use the fragment
+	*(u16*) (remotePlayBuffer + 0x14 + 8) = 0x0040; // no fragment
+	*(u16*) (remotePlayBuffer + 0x16 + 8) = 0x1140; // ttl 64, udp
+	*(u16*) (remotePlayBuffer + 0x18 + 8) = 0;
+	*(u16*) (remotePlayBuffer + 0x18 + 8) = ip_checksum(remotePlayBuffer + 0xE + 8, 0x14);
 
 	dataLen += 22;
-	*(u16*)(remotePlayBuffer + 12) = htons(dataLen);
+	*(u16*) (remotePlayBuffer + 12) = htons(dataLen);
 
 	return dataLen;
 }
@@ -275,13 +274,13 @@ int getBppForFormat(int format) {
 	int bpp;
 
 	format &= 0x0f;
-	if (format == 0){
+	if (format == 0) {
 		bpp = 4;
 	}
-	else if (format == 1){
+	else if (format == 1) {
 		bpp = 3;
 	}
-	else{
+	else {
 		bpp = 2;
 	}
 	return bpp;
@@ -291,7 +290,7 @@ typedef struct _BLIT_CONTEXT {
 	int x, y;
 	u8* src;
 	int outformat, bpp;
-	u32 bytesInColumn ;
+	u32 bytesInColumn;
 	u32 blankInColumn;
 
 	u8* transformDst;
@@ -311,13 +310,13 @@ typedef struct _BLIT_CONTEXT {
 void remotePlayBlitInit(BLIT_CONTEXT* ctx, int width, int height, int format, int src_pitch, u8* src) {
 
 	format &= 0x0f;
-	if (format == 0){
+	if (format == 0) {
 		ctx->bpp = 4;
 	}
-	else if (format == 1){
+	else if (format == 1) {
 		ctx->bpp = 3;
 	}
-	else{
+	else {
 		ctx->bpp = 2;
 	}
 	ctx->bytesInColumn = ctx->bpp * height;
@@ -397,7 +396,7 @@ int remotePlayBlitCompressed(BLIT_CONTEXT* ctx) {
 	//u8* pixp;
 
 	ctx->directCompress = 0;
-	if ((bpp == 3) || (bpp == 4)){
+	if ((bpp == 3) || (bpp == 4)) {
 		ctx->directCompress = 1;
 		return 0;
 		/*
@@ -417,7 +416,7 @@ int remotePlayBlitCompressed(BLIT_CONTEXT* ctx) {
 		svc_sleepThread(500000);
 		for (x = 0; x < width; x++) {
 			for (y = 0; y < height; y++) {
-				u16 pix = *(u16*)sp;
+				u16 pix = *(u16*) sp;
 				dp[0] = ((pix >> 11) & 0x1f) << 3;
 				dp[1] = ((pix >> 5) & 0x3f) << 2;
 				dp[2] = (pix & 0x1f) << 3;
@@ -534,7 +533,7 @@ int remotePlayBlit(BLIT_CONTEXT* ctx) {
 				dp[0] = ctx->src[0];
 				dp[1] = ctx->src[1];
 				dp += 2;
-				ctx->src+= bpp;
+				ctx->src += bpp;
 				ctx->y += 1;
 			}
 		}
@@ -544,9 +543,9 @@ int remotePlayBlit(BLIT_CONTEXT* ctx) {
 				if (dp - dataBuf >= PACKET_SIZE) {
 					return dp - dataBuf;
 				}
-				*((u16*)(dp)) = ((u16)((ctx->src[2] >> 3) & 0x1f) << 11) |
-					((u16)((ctx->src[1] >> 2) & 0x3f) << 5) |
-					((u16)((ctx->src[0] >> 3) & 0x1f));
+				*((u16*) (dp)) = ((u16) ((ctx->src[2] >> 3) & 0x1f) << 11) |
+					((u16) ((ctx->src[1] >> 2) & 0x3f) << 5) |
+					((u16) ((ctx->src[0] >> 3) & 0x1f));
 				dp += 2;
 				ctx->src += bpp;
 				ctx->y += 1;
@@ -562,7 +561,7 @@ int remotePlayBlit(BLIT_CONTEXT* ctx) {
 
 void remotePlayKernelCallback() {
 	u32 current_fb;
-	
+
 	//Unused
 	//u32 ret;
 	//u32 fbP2VOffset = 0xc0000000;
@@ -666,7 +665,7 @@ int isInFCRAM(u32 phys) {
 
 void rpCaptureScreen(int isTop) {
 	u8 dmaConfig[80] = { 0, 0, 4 };
-	u32 bufSize = isTop? (tl_pitch * 400) : (bl_pitch * 320);
+	u32 bufSize = isTop ? (tl_pitch * 400) : (bl_pitch * 320);
 	uintptr_t phys = isTop ? tl_current : bl_current;
 	uintptr_t dest = *(uintptr_t*) imgBuffer;
 	Handle hProcess = rpHandleHome;
@@ -698,8 +697,6 @@ void rpCaptureScreen(int isTop) {
 		return;
 	}
 	svc_sleepThread(1000000000);
-
-
 }
 
 
@@ -742,7 +739,7 @@ void remotePlaySendFrames() {
 			topContext.compressDst = 0;
 			topContext.transformDst = imgBuffer + 0x00150000;
 			topContext.reset = 1;
-			topContext.id = (u8)currentTopId;
+			topContext.id = (u8) currentTopId;
 			topContext.isTop = 1;
 			remotePlayBlitCompressed(&topContext);
 			rpCompressAndSendPacket(&topContext);
@@ -755,7 +752,7 @@ void remotePlaySendFrames() {
 			botContext.compressDst = 0;
 			botContext.transformDst = imgBuffer + 0x00150000;
 			botContext.reset = 1;
-			botContext.id = (u8)currentBottomId;
+			botContext.id = (u8) currentBottomId;
 			botContext.isTop = 0;
 			remotePlayBlitCompressed(&botContext);
 			rpCompressAndSendPacket(&botContext);
@@ -778,15 +775,12 @@ void remotePlayThreadStart() {
 	//Unused
 	//uintptr_t temp = (uintptr_t) &remotePlayBuffer[0];
 	//u8* dataBuf = (u8*) (temp + 0x2a + 8);
-	
+
 	//Unused
 	//u32 remainSize;
 
-	uintptr_t temp = plgRequestMemorySpecifyRegion(0x00200000, 1);
-	imgBuffer = (u8*) temp;
-
-	temp = plgRequestMemorySpecifyRegion(0x00100000, 1);
-	rpAllocBuff = (u8*) temp;
+	imgBuffer = (u8*) ((uintptr_t) plgRequestMemorySpecifyRegion(0x00200000, 1));
+	rpAllocBuff = (u8*) ((uintptr_t) plgRequestMemorySpecifyRegion(0x00100000, 1));
 	if (rpAllocBuff) {
 		rpAllocBuffRemainSize = 0x00100000;
 	}
@@ -808,7 +802,7 @@ void remotePlayThreadStart() {
 	svc_exitThread();
 }
 
-int nwmValParamCallback(u8* buf, int buflen) {
+u32 nwmValParamCallback(u8* buf, int buflen) {
 	//rtDisableHook(&nwmValParamHook);
 
 	//Unused
@@ -830,13 +824,12 @@ int nwmValParamCallback(u8* buf, int buflen) {
 		return 0;
 	}
 	if (buf[0x17 + 0x8] == 6) {
-		if ((*(u16*)(&buf[0x22 + 0x8])) == 0x401f) {  // src port 8000
+		if ((*(u16*) (&buf[0x22 + 0x8])) == 0x401f) {  // src port 8000
 			remotePlayInited = 1;
 			memcpy(remotePlayBuffer, buf, 0x22 + 8);
 			packetLen = initUDPPacket(PACKET_SIZE);
-			uintptr_t temp = plgRequestMemory(stackSize);
-			threadStack = (u32*) temp;
-			ret = svc_createThread(&hThread, (void*)remotePlayThreadStart, 0, &threadStack[(stackSize / 4) - 10], 0x10, 2);
+			threadStack = (u32*) ((uintptr_t) plgRequestMemory(stackSize));
+			ret = svc_createThread(&hThread, &remotePlayThreadStart, 0, &threadStack[(stackSize / 4) - 10], 0x10, 2);
 			if (ret != 0) {
 				nsDbgPrint((const char*) "Create RemotePlay Thread Failed: %08x\n", ret);
 			}
@@ -846,10 +839,9 @@ int nwmValParamCallback(u8* buf, int buflen) {
 }
 
 void remotePlayMain() {
-	nwmSendPacket = g_nsConfig->startupInfo[12];
-	rtInitHookThumb(&nwmValParamHook, g_nsConfig->startupInfo[11], nwmValParamCallback);
+	memcpy(&nwmSendPacket, &g_nsConfig->startupInfo[12], sizeof(sendPacketTypedef));
+	rtInitHookThumb(&nwmValParamHook, (u32) ((uintptr_t) &g_nsConfig->startupInfo[11]), (u32) ((uintptr_t) nwmValParamCallback));
 	rtEnableHook(&nwmValParamHook);
-
 }
 
 
@@ -984,7 +976,7 @@ void nsHandleSaveFile() {
 	buf[0x200] = 0;
 	remain -= 0x200;
 
-	FS_path testPath = (FS_path){ PATH_CHAR, strlen((const char*) buf) + 1, buf };
+	FS_path testPath = (FS_path) { PATH_CHAR, strlen((const char*) buf) + 1, buf };
 	ret = FSUSER_OpenFileDirectly(fsUserHandle, &hFile, sdmcArchive, testPath, 7, 0);
 	if (ret != 0) {
 		showDbg((u8*) "openFile failed: %08x", ret, 0);
@@ -997,7 +989,7 @@ void nsHandleSaveFile() {
 			t = remain;
 		}
 		nsRecvPacketData(g_nsCtx->gBuff, t);
-		FSFILE_Write(hFile, &tmp, off, (u32*)g_nsCtx->gBuff, t, 0);
+		FSFILE_Write(hFile, &tmp, off, (u32*) g_nsCtx->gBuff, t, 0);
 
 		remain -= t;
 		off += t;
@@ -1054,7 +1046,7 @@ void nsBreakPointCallback(u32 regs, u32 bpid, u32 regs2) {
 
 	//update bp status
 	rtAcquireLock(&(g_nsCtx->breakPointStatusLock));
-	bpStatus->regs = (vu32*)regs;
+	bpStatus->regs = (vu32*) regs;
 	bpStatus->bpid = bpid;
 	bpStatus->resumeFlag = 0;
 	rtReleaseLock(&(g_nsCtx->breakPointStatusLock));
@@ -1100,13 +1092,13 @@ u32 nsInitCodeBreakPoint(int id) {
 	u32 pos = (sizeof(buf) / 4);
 
 	ret = rtCheckRemoteMemoryRegionSafeForWrite(getCurrentProcessHandle(), bp->addr, 8);
-	if (ret != 0){
+	if (ret != 0) {
 		nsDbgPrint((const char*) "rtCheckRemoteMemoryRegionSafeForWrite failed :%08x\n", ret);
 		return ret;
 	}
 
 	if (bp->type == NS_BPTYPE_CODE) {
-		retAddr = (u32)hk->callCode;
+		retAddr = (u32) hk->callCode;
 	}
 
 	if (bp->type == NS_BPTYPE_CODEONESHOT) {
@@ -1115,12 +1107,12 @@ u32 nsInitCodeBreakPoint(int id) {
 
 	memcpy(bp->stubCode, buf, sizeof(buf));
 	bp->stubCode[pos] = id;
-	bp->stubCode[pos + 1] = (u32)nsBreakPointCallback;
-	bp->stubCode[pos + 2] = (u32)retAddr;
+	bp->stubCode[pos + 1] = (u32) nsBreakPointCallback;
+	bp->stubCode[pos + 2] = (u32) retAddr;
 
 	rtFlushInstructionCache(bp->stubCode, 16 * 4);
 
-	rtInitHook(&(bp->hook), bp->addr, (u32)(bp->stubCode));
+	rtInitHook(&(bp->hook), bp->addr, (u32) (bp->stubCode));
 	svc_sleepThread(100000000);
 	return 0;
 }
@@ -1223,11 +1215,11 @@ void nsHandleReload() {
 	u8* fileName = (u8*) "/arm11.bin";
 	u32 tmp;
 
-	typedef void (*funcType)();
+	typedef void(*funcType)();
 	g_nsConfig->initMode = 1;
 	closesocket(g_nsCtx->hSocket);
 	closesocket(g_nsCtx->hListenSocket);
-	FS_path testPath = (FS_path){ PATH_CHAR, strlen((const char*) fileName) + 1, fileName };
+	FS_path testPath = (FS_path) { PATH_CHAR, strlen((const char*) fileName) + 1, fileName };
 	ret = FSUSER_OpenFileDirectly(fsUserHandle, &hFile, sdmcArchive, testPath, 7, 0);
 	if (ret != 0) {
 		showDbg((u8*) "openFile failed: %08x", ret, 0);
@@ -1240,23 +1232,23 @@ void nsHandleReload() {
 	}
 	size = size64;
 	size = rtAlignToPageSize(size);
-	ret = svc_controlMemory((u32*)&outAddr, 0, 0, size, 0x10003, 3);
+	ret = svc_controlMemory((u32*) &outAddr, 0, 0, size, 0x10003, 3);
 	if (ret != 0) {
 		showDbg((u8*) "svc_controlMemory failed: %08x", ret, 0);
 		return;
 	}
 
-	ret = FSFILE_Read(hFile, &tmp, 0, (u32*)outAddr, size);
+	ret = FSFILE_Read(hFile, &tmp, 0, (u32*) outAddr, size);
 	if (ret != 0) {
 		showDbg((u8*) "FSFILE_Read failed: %08x", ret, 0);
 		return;
 	}
-	ret = protectMemory((u32*)outAddr, size);
+	ret = protectMemory((u32*) outAddr, size);
 	if (ret != 0) {
 		showDbg((u8*) "protectMemory failed: %08x", ret, 0);
 		return;
 	}
-	((funcType)outAddr)();
+	((funcType) outAddr)();
 	svc_exitThread();
 }
 
@@ -1288,7 +1280,7 @@ void printMemLayout(Handle hProcess, u32 base, u32 limit) {
 	u32 ret, isValid = 0, isLastValid = 0;
 	u32 lastAddr = 0;
 	while (base < limit) {
-		ret = protectRemoteMemory(hProcess, (void*)base, 0x1000);
+		ret = protectRemoteMemory(hProcess, (void*) base, 0x1000);
 		isValid = (ret == 0);
 		if (isValid != isLastValid) {
 			if (isLastValid) {
@@ -1369,15 +1361,15 @@ void nsHandleWriteMem() {
 		nsRecvPacketData(g_nsCtx->gBuff, tmpsize);
 		if (pid == -1) {
 			if (addr > 0x20000000) {
-				kmemcpy((void*)addr, g_nsCtx->gBuff, tmpsize);
+				kmemcpy((void*) addr, g_nsCtx->gBuff, tmpsize);
 			}
 			else {
-				memcpy((void*)addr, g_nsCtx->gBuff, tmpsize);
+				memcpy((void*) addr, g_nsCtx->gBuff, tmpsize);
 			}
 
 		}
 		else {
-			ret = copyRemoteMemory(hProcess, (void*)addr, 0xffff8001, g_nsCtx->gBuff, tmpsize);
+			ret = copyRemoteMemory(hProcess, (void*) addr, 0xffff8001, g_nsCtx->gBuff, tmpsize);
 			if (ret != 0) {
 				nsDbgPrint((const char*) "copyRemoteMemory failed: %08x, addr: %08x\n", ret, addr);
 			}
@@ -1435,15 +1427,15 @@ void nsHandleReadMem() {
 		}
 		if (pid == -1) {
 			if (addr > 0x20000000) {
-				kmemcpy(g_nsCtx->gBuff, (void*)addr, tmpsize);
+				kmemcpy(g_nsCtx->gBuff, (void*) addr, tmpsize);
 			}
-			else{
-				memcpy(g_nsCtx->gBuff, (void*)addr, tmpsize);
+			else {
+				memcpy(g_nsCtx->gBuff, (void*) addr, tmpsize);
 			}
 
 		}
 		else {
-			ret = copyRemoteMemory(0xffff8001, g_nsCtx->gBuff, hProcess, (void*)addr, tmpsize);
+			ret = copyRemoteMemory(0xffff8001, g_nsCtx->gBuff, hProcess, (void*) addr, tmpsize);
 			if (ret != 0) {
 				nsDbgPrint((const char*) "copyRemoteMemory failed: %08x, addr: %08x\n", ret, addr);
 			}
@@ -1580,7 +1572,7 @@ u32 nsAttachProcess(Handle hProcess, u32 remotePC, NS_CONFIG *cfg, int sysRegion
 	u32 arm11StartAddress;
 
 	arm11StartAddress = baseAddr + 0x1000 + stackSize;
-	buf = (u32*)arm11BinStart;
+	buf = (u32*) arm11BinStart;
 	size = arm11BinSize;
 	nsDbgPrint((const char*) "buf: %08x, size: %08x\n", buf, size);
 
@@ -1604,13 +1596,13 @@ u32 nsAttachProcess(Handle hProcess, u32 remotePC, NS_CONFIG *cfg, int sysRegion
 		nsDbgPrint((const char*) "mapRemoteMemory failed: %08x\n", ret, 0);
 	}
 	// set rwx
-	ret = protectRemoteMemory(hProcess, (void*)baseAddr, totalSize);
+	ret = protectRemoteMemory(hProcess, (void*) baseAddr, totalSize);
 	if (ret != 0) {
 		nsDbgPrint((const char*) "protectRemoteMemory failed: %08x\n", ret, 0);
 		goto final;
 	}
 	// load arm11.bin code at arm11StartAddress
-	ret = copyRemoteMemory(hProcess, (void*)arm11StartAddress, arm11BinProcess, buf, size);
+	ret = copyRemoteMemory(hProcess, (void*) arm11StartAddress, arm11BinProcess, buf, size);
 	if (ret != 0) {
 		nsDbgPrint((const char*) "copyRemoteMemory(1) failed: %08x\n", ret, 0);
 		goto final;
@@ -1634,7 +1626,7 @@ u32 nsAttachProcess(Handle hProcess, u32 remotePC, NS_CONFIG *cfg, int sysRegion
 	cfg->initMode = NS_INITMODE_FROMHOOK;
 
 	// store original 8-byte code
-	ret = copyRemoteMemory(0xffff8001, &(cfg->startupInfo[0]), hProcess, (void*)remotePC, 8);
+	ret = copyRemoteMemory(0xffff8001, &(cfg->startupInfo[0]), hProcess, (void*) remotePC, 8);
 	if (ret != 0) {
 		nsDbgPrint((const char*) "copyRemoteMemory(3) failed: %08x\n", ret, 0);
 		goto final;
@@ -1642,7 +1634,7 @@ u32 nsAttachProcess(Handle hProcess, u32 remotePC, NS_CONFIG *cfg, int sysRegion
 	cfg->startupInfo[2] = remotePC;
 	memcpy(&(cfg->ntrConfig), ntrConfig, sizeof(NTR_CONFIG));
 	// copy cfg structure to remote process
-	ret = copyRemoteMemory(hProcess, (void*)baseAddr, 0xffff8001, cfg, sizeof(NS_CONFIG));
+	ret = copyRemoteMemory(hProcess, (void*) baseAddr, 0xffff8001, cfg, sizeof(NS_CONFIG));
 	if (ret != 0) {
 		nsDbgPrint((const char*) "copyRemoteMemory(2) failed: %08x\n", ret, 0);
 		goto final;
@@ -1651,7 +1643,7 @@ u32 nsAttachProcess(Handle hProcess, u32 remotePC, NS_CONFIG *cfg, int sysRegion
 	// write hook instructions to remote process
 	tmp[0] = 0xe51ff004;
 	tmp[1] = arm11StartAddress;
-	ret = copyRemoteMemory(hProcess, (void*)remotePC, 0xffff8001, &tmp, 8);
+	ret = copyRemoteMemory(hProcess, (void*) remotePC, 0xffff8001, &tmp, 8);
 	if (ret != 0) {
 		nsDbgPrint((const char*) "copyRemoteMemory(4) failed: %08x\n", ret, 0);
 		goto final;
@@ -1695,7 +1687,7 @@ void nsPrintRegs(u32* regs) {
 	u32 i;
 
 	nsDbgPrint((const char*) "cpsr:%08x ", regs[0]);
-	nsDbgPrint((const char*) "lr:%08x sp:%08x\n", regs[14], (u32)(regs)+14 * 4);
+	nsDbgPrint((const char*) "lr:%08x sp:%08x\n", regs[14], (u32) (regs) +14 * 4);
 	for (i = 0; i <= 12; i++) {
 		nsDbgPrint((const char*) "r%d:%08x ", i, regs[1 + i]);
 	}
@@ -1716,7 +1708,7 @@ void nsUpdateDebugStatus() {
 
 	if ((isActived) && (!g_nsCtx->isBreakPointHandled)) {
 		nsDbgPrint((const char*) "breakpoint %d hit\n", bpStatus.bpid);
-		nsPrintRegs((u32*)bpStatus.regs);
+		nsPrintRegs((u32*) bpStatus.regs);
 	}
 	g_nsCtx->isBreakPointHandled = isActived;
 }
@@ -1869,9 +1861,9 @@ void nsThreadStart() {
 #define STACK_SIZE 0x4000
 
 void nsInitDebug() {
-	xfunc_out = (void*)nsDbgPutc;
+	xfunc_out = (void*) nsDbgPutc;
 	rtInitLock(&(g_nsConfig->debugBufferLock));
-	g_nsConfig->debugBuf = (u8*)(NS_CONFIGURE_ADDR + 0x0900);
+	g_nsConfig->debugBuf = (u8*) (NS_CONFIGURE_ADDR + 0x0900);
 	g_nsConfig->debugBufSize = 0xf0;
 	g_nsConfig->debugPtr = 0;
 	g_nsConfig->debugReady = 1;
@@ -1924,7 +1916,7 @@ void nsInit() {
 		initSrv();
 	}
 	if (g_nsConfig->hSOCU == 0) {
-		ret = SOC_Initialize((u32*)outAddr, socuSharedBufferSize);
+		ret = SOC_Initialize((u32*) outAddr, socuSharedBufferSize);
 		if (ret != 0) {
 			showDbg((u8*) "SOC_Initialize failed: %08x", ret, 0);
 			return;
@@ -1936,7 +1928,7 @@ void nsInit() {
 	}
 
 
-	g_nsCtx = (void*)(outAddr + socuSharedBufferSize);
+	g_nsCtx = (void*) (outAddr + socuSharedBufferSize);
 
 	memset(g_nsCtx, 0, sizeof(NS_CONTEXT));
 
@@ -1961,10 +1953,10 @@ void nsInit() {
 		return;
 	}
 
-	threadStack = (u32*)(outAddr + socuSharedBufferSize + rtAlignToPageSize(sizeof(NS_CONTEXT)));
+	threadStack = (u32*) (outAddr + socuSharedBufferSize + rtAlignToPageSize(sizeof(NS_CONTEXT)));
 
 	u32 affinity = 0x10;
-	ret = svc_createThread(&handle, (void*)nsThreadStart, 0, &threadStack[(STACK_SIZE / 4) - 10], affinity, 0xFFFFFFFE);
+	ret = svc_createThread(&handle, (void*) nsThreadStart, 0, &threadStack[(STACK_SIZE / 4) - 10], affinity, 0xFFFFFFFE);
 	if (ret != 0) {
 		showDbg((u8*) "svc_createThread failed: %08x", ret, 0);
 		return;

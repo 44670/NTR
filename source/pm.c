@@ -1,10 +1,13 @@
+
+
 #include "global.h"
 
 void print(char* s, int x, int y, char r, char g, char b);
 
-void dumpKernel() {
-
-}
+//Unused
+//void dumpKernel() {
+//
+//}
 
 Handle hCurrentProcess = 0;
 u32 currentPid = 0;
@@ -155,13 +158,15 @@ u32 copyRemoteMemory(Handle hDst, void* ptrDst, Handle hSrc, void* ptrSrc, u32 s
 
 u32 getProcessTIDByHandle(u32 hProcess, u32 tid[]) {
 	u8 bufKProcess[0x100], bufKCodeSet[0x100];
-	u32 pKProcess; // , ret;
-	uintptr_t pKCodeSet;
+	//u32 pKProcess, pKCodeSet; // , ret;
 
-	pKProcess = kGetKProcessByHandle(hProcess);
-	kmemcpy(bufKProcess, (void*)pKProcess, 0x100);
-	pKCodeSet = *(u32*)(&bufKProcess[KProcessCodesetOffset]);
-	kmemcpy(bufKCodeSet, (void*)pKCodeSet, 0x100);
+	uintptr_t pKProcess;
+	uintptr_t pKCodeSet;
+	pKProcess = (uintptr_t) kGetKProcessByHandle(hProcess);
+	kmemcpy((void*) bufKProcess, (void*) pKProcess, 0x100);
+	pKCodeSet = (uintptr_t) &bufKProcess[KProcessCodesetOffset];
+	kmemcpy((void*) bufKCodeSet, (void*)pKCodeSet, 0x100);
+
 	u32* pTid = (u32*)(&bufKCodeSet[0x5c]);
 	tid[0] = pTid[0];
 	tid[1] = pTid[1];
@@ -172,9 +177,13 @@ u32 getProcessTIDByHandle(u32 hProcess, u32 tid[]) {
 
 u32 getProcessInfo(u32 pid, u8* pname, u32 tid[], u32* kpobj) {
 	u8 bufKProcess[0x100], bufKCodeSet[0x100];
-	u32 hProcess, pKCodeSet, pKProcess, ret;
+	u32 ret, hProcess;
+
 	//Unused.
+	//u32 pKCodeSet, pKProcess;
 	//u8 buf[300];
+
+	uintptr_t pKCodeSet, pKProcess;
 
 	ret = 0;
 	ret = svc_openProcess(&hProcess, pid);
@@ -183,9 +192,9 @@ u32 getProcessInfo(u32 pid, u8* pname, u32 tid[], u32* kpobj) {
 		goto final;
 	}
 
-	pKProcess = kGetKProcessByHandle(hProcess);
+	pKProcess = (uintptr_t) kGetKProcessByHandle(hProcess);
 	kmemcpy(bufKProcess, (void*)pKProcess, 0x100);
-	pKCodeSet = *(u32*)(&bufKProcess[KProcessCodesetOffset]);
+	pKCodeSet = (uintptr_t) &bufKProcess[KProcessCodesetOffset];
 	kmemcpy(bufKCodeSet, (void*)pKCodeSet, 0x100);
 	bufKCodeSet[0x5A] = 0;
 	u8* pProcessName = &bufKCodeSet[0x50];
@@ -327,8 +336,10 @@ void dumpCode(u32 base, u32 size, u8* fileName) {
 		showMsgNoPause(buf);
 		for (i = 0; i < 1000000; i++) {
 		}
-		kmemcpy(tmpBuffer, (void*)(base + off), 0x1000);
-		FSFILE_Write(handle, &t, off, tmpBuffer, 0x1000, 0);
+		kmemcpy((void*) tmpBuffer, (void*)(base + off), 0x1000);
+
+		uintptr_t temp = (uintptr_t) &tmpBuffer[0];
+		FSFILE_Write(handle, &t, off, (u32*) temp, 0x1000, 0);
 		off += 0x1000;
 	}
 }
