@@ -23,16 +23,20 @@
 
 void paint_pixel(u32 x, u32 y, char r, char g, char b, int screen);
 void paint_word(char* word, int x,int y, char r, char g, char b, int screen);
-void paint_word_vert(char* word, int x,int y, char r, char g, char b, int screen);
-void paint_buffer(u8* file, point f_dim, point offset, int screen);
-void paint_byte_pixel(unsigned char byte, int x, int y, int screen);
-void paint_sprite(unsigned char* sheet, point f_dim, point offset, int screen, int height, int width, int xstart, int ystart);
 void paint_square(int x, int y, char r, char g, char b, int h, int w, int screen);
+void paint_letter(u8 letter, int x, int y, char r, char g, char b, int screen);
 
+//Unused paint functions.
+//void paint_word_vert(char* word, int x,int y, char r, char g, char b, int screen);
+//void paint_buffer(u8* file, point f_dim, point offset, int screen);
+//void paint_byte_pixel(unsigned char byte, int x, int y, int screen);
+//void paint_sprite(unsigned char* sheet, point f_dim, point offset, int screen, int height, int width, int xstart, int ystart);
 
 //DLH
 void blank(int x, int y, int xs, int ys);
-void square(int x, int y, int xs, int ys);
+
+//Unused function for DLH.
+//void square(int x, int y, int xs, int ys);
 
 extern u32 bottomFrameBuffer;
 #endif
