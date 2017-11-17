@@ -46,7 +46,6 @@ CFLAGS += $(INCLUDE) -Os
 else
 CFLAGS += $(INCLUDE) -O3
 endif
-HAS_DSP := 
 
 TARGET := o3ds_ntr_payload
 
