@@ -20,36 +20,38 @@ include $(DEVKITARM)/3ds_rules
 # DATA is a list of directories containing data files
 # INCLUDES is a list of directories containing header files
 #---------------------------------------------------------------------------------
-TARGET		:=
+# TARGET	:=
 BUILD		:=	build
 SOURCES		:=	source source/dsp source/jpeg source/ns source/libctru
 DATA		:=
 INCLUDES	:=	include include/jpeg
+OLD_3DS_TARGET := o3ds_ntr_payload
+NEW_3DS_TARGET := n3ds_ntr_payload
 
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
 ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 
-CFLAGS	:=	-Wall \
+CFLAGS_DEF	:=	-Wall \
 			-fomit-frame-pointer -ffunction-sections -fdata-sections \
 			$(ARCH)
 
 ifeq ($(strip $(NEW_3DS)),1)
-CFLAGS += $(INCLUDE) -DHAS_JPEG=1 -O3
-TARGET := n3ds_ntr_payload
+TARGET := $(NEW_3DS_TARGET)
+CFLAGS_VAR := $(INCLUDE) -DHAS_JPEG=1 -O3
 else
+TARGET := $(OLD_3DS_TARGET)
 
-HAS_DSP := $(call containing,dsp,$(VPATH))
-ifeq ($(strip $(HAS_DSP)),)
-CFLAGS += $(INCLUDE) -Os
+ifeq ($(findstring nightshift,$(basename $%)),nightshift)
+CFLAGS_VAR := $(INCLUDE) -O3
 else
-CFLAGS += $(INCLUDE) -O3
+CFLAGS_VAR := $(INCLUDE) -Os
 endif
 
-TARGET := o3ds_ntr_payload
-
 endif
+
+CFLAGS	:= $(CFLAGS_DEF) $(CFLAGS_VAR)
 
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 
@@ -125,7 +127,7 @@ $(BUILD):
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(TARGET).bin $(TARGET).elf
+	@rm -fr $(BUILD) $(NEW_3DS_TARGET).bin $(NEW_3DS_TARGET).elf $(OLD_3DS_TARGET).bin $(OLD_3DS_TARGET).elf
 
 old_3ds:
 	@echo making ntr_payload for old_3ds ...

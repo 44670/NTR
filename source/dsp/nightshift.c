@@ -1,5 +1,10 @@
 #include "global.h"
 
+#ifndef NEW_3DS
+#	pragma GCC push_options
+#	pragma GCC optimize ("O3")
+#endif
+
 extern PLGLOADER_INFO *g_plgInfo;
 
 #define NIGHT_SHIFT_RGB565_B(level)  \
@@ -294,3 +299,7 @@ u32 plgNightShiftFramebuffer(u32 addr, u32 stride, u32 height, u32 format) {
 	}
 	return plgNightShift2(addr, stride, height, format, 0);
 }
+
+#ifndef NEW_3DS
+#	pragma GCC pop_options
+#endif
