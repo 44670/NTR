@@ -1,6 +1,6 @@
 #define IS_PLUGIN 0
 
-#define NTR_CFW_VERSION "NTR 3.6"
+#define NTR_CFW_VERSION ((u8*)"NTR 3.6")
 #include "main.h"
 
 #include "memory.h"
@@ -25,5 +25,5 @@
 
 #include "func.h"
 #include "sharedfunc.h"
-#include <ns/ns.h>
-#include <sys/socket.h>
+#include "ns/ns.h"
+#include "sys/socket.h"
