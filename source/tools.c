@@ -10,9 +10,8 @@
 
 u8 *image_buf = NULL;
 
-
-
-
+void disp(u32 t, u32 cl);
+void print(char* s, int x, int y, char r, char g, char b);
 
 int sdf_open(char *filename, int mode)
 {
@@ -225,7 +224,7 @@ void allocImageBuf() {
 		return;
 	}
 	u32 out_addr = plgRequestMemory(0x00100000);
-	nsDbgPrint("    out_addr: %08x", out_addr);
+	nsDbgPrint((const char*) "    out_addr: %08x", out_addr);
 	image_buf = (u8*)out_addr;
 }
 
@@ -239,9 +238,11 @@ void do_screen_shoot(void)
 	u32 tl_pitch, bl_pitch;
 	u8 *rev_buf;
 	u32 fbP2VOffset = 0xc0000000;
-	u32 out_addr;
 
-	u32 workingBuffer;
+	//Unused
+	//u32 out_addr;
+
+	uintptr_t workingBuffer = 0;
 
 	char name[64];
 
@@ -252,10 +253,10 @@ void do_screen_shoot(void)
 		if (image_buf == NULL) {
 			return;
 		}
-		workingBuffer = image_buf;
+		workingBuffer = (uintptr_t) image_buf;
 	}
 	else {
-		workingBuffer = plgRequestTempBuffer(0xA0000);
+		workingBuffer = (uintptr_t) plgRequestTempBuffer(0xA0000);
 	}
 
 	if (workingBuffer == 0) {
@@ -277,10 +278,10 @@ void do_screen_shoot(void)
 	current_fb &= 1;
 	kmemcpy((void*)(workingBuffer + 0x50000), (void*)tl_fbaddr[current_fb], 240 * 400 * 3);
 
-	rev_buf = workingBuffer + sizeof(struct BitmapHeader);
-	rev_image(rev_buf, 400, 240, workingBuffer + 0x50000, tl_pitch, tl_format);
+	rev_buf = ((u8*)workingBuffer) + sizeof(struct BitmapHeader);
+	rev_image(rev_buf, 400, 240, (u8*)(workingBuffer + 0x50000), tl_pitch, tl_format);
 	xsprintf(name, "/top_%04d.bmp", bmp_index);
-	bmp_write(workingBuffer, 400, 240, name);
+	bmp_write((u8*) workingBuffer, 400, 240, name);
 
 
 	// Bottom screen
@@ -288,10 +289,10 @@ void do_screen_shoot(void)
 	current_fb &= 1;
 	kmemcpy((void*)(workingBuffer + 0x50000), (void*)bl_fbaddr[current_fb], 240 * 320 * 3);
 
-	rev_buf = workingBuffer + sizeof(struct BitmapHeader);
-	rev_image(rev_buf, 320, 240, workingBuffer + 0x50000, bl_pitch, bl_format);
+	rev_buf = ((u8*)workingBuffer) + sizeof(struct BitmapHeader);
+	rev_image(rev_buf, 320, 240, (u8*)(workingBuffer + 0x50000), bl_pitch, bl_format);
 	xsprintf(name, "/bot_%04d.bmp", bmp_index);
-	bmp_write(workingBuffer, 320, 240, name);
+	bmp_write((u8*) workingBuffer, 320, 240, name);
 	disp(100, 0x01ff00ff);
 
 	bmp_index += 1;
@@ -299,7 +300,9 @@ void do_screen_shoot(void)
 
 u32 takeScreenShot() {
 	vu32 i;
-	u32 ret, out_addr;
+
+	//Unused
+	//u32 ret, out_addr;
 
 	for (i = 0; i < 0x1000000; i++) {
 	}
@@ -324,13 +327,15 @@ u32 getRegionSize(Handle hProcess, u32 addr) {
 
 u32 fastCopyMemory(Handle hDst, u32 ptrDst, Handle hSrc, u32 ptrSrc, u32 size) {
 	u32 ret = 0;
-	ret = copyRemoteMemory(hDst, ptrDst, hSrc, ptrSrc, size);
+	uintptr_t tempSrc = ptrSrc;
+	uintptr_t tempDst = ptrDst;
+	ret = copyRemoteMemory(hDst, (void*) tempDst, hSrc, (void*) tempSrc, size);
 	if (ret == 0) {
 		return 0;
 	}
 	u32 off = 0;
 	for (off = 0; off < size; off += 0x1000) {
-		ret = copyRemoteMemory(hDst, ptrDst + off, hSrc, ptrSrc + off, 0x1000);
+		ret = copyRemoteMemory(hDst, (void*) (tempDst + off), hSrc, (void*) (tempSrc + off), 0x1000);
 		if (ret != 0) {
 			return ret;
 		}
@@ -349,11 +354,15 @@ u32 loadSaveVRAM(int fd, int isLoad) {
 		if (isLoad) {
 			ret = sdf_read(fd, off, image_buf, 0x00100000);
 			if (ret >= 0) {
-				memcpy(VRAM_ADDR + off, image_buf, 0x00100000);
+				uintptr_t temp = VRAM_ADDR;
+				uintptr_t temp_buf = (uintptr_t) image_buf;
+				memcpy((void*) (temp + off), (void*) temp_buf, 0x00100000);
 			}
 		}
 		else {
-			memcpy(image_buf, VRAM_ADDR + off, 0x00100000);
+			uintptr_t temp = VRAM_ADDR + off;
+			uintptr_t temp_buf = (uintptr_t) image_buf;
+			memcpy((void*) temp_buf, (void*) temp, 0x00100000);
 			ret = sdf_write(fd, off, image_buf, 0x00100000);
 		}
 		if (ret < 0) {
@@ -375,7 +384,8 @@ u32 saveRegion(Handle hProcess, u32 addr, int fd, u32 offsetInFile, u32 size) {
 		if (currentRead > 0x00100000) {
 			currentRead = 0x00100000;
 		}
-		ret = fastCopyMemory(CURRENT_PROCESS_HANDLE, image_buf, hProcess, addr + off, currentRead);
+		uintptr_t temp = (uintptr_t) image_buf;
+		ret = fastCopyMemory(CURRENT_PROCESS_HANDLE, (u32) temp, hProcess, addr + off, currentRead);
 		if (ret != 0) {
 			return ret;
 		}
@@ -395,7 +405,8 @@ u32 loadRegion(Handle hProcess, u32 addr, int fd, u32 offsetInFile, u32 size) {
 			currentRead = 0x00100000;
 		}
 		sdf_read(fd, off + offsetInFile, image_buf, currentRead);
-		ret = fastCopyMemory(hProcess, addr + off, CURRENT_PROCESS_HANDLE, image_buf, currentRead);
+		uintptr_t temp = (uintptr_t) image_buf;
+		ret = fastCopyMemory(hProcess, addr + off, CURRENT_PROCESS_HANDLE, (u32) temp, currentRead);
 		if (ret != 0) {
 			return ret;
 		}
@@ -413,7 +424,7 @@ u32 instantSave(int id, int isLoad) {
 	delayUi();
 	u32 gamePid = g_plgInfo->gamePluginPid;
 	if (gamePid == 0) {
-		showDbg("game not running", 0, 0);
+		showDbg((u8*) "game not running", 0, 0);
 		return 0;
 	}
 	Handle hProcess = 0, hGSPProcess = 0;
@@ -421,27 +432,27 @@ u32 instantSave(int id, int isLoad) {
 	int fd = 0;
 	ret = svc_openProcess(&hProcess, gamePid);
 	if (ret != 0) {
-		showDbg("open Game Process failed: %08x", ret, 0);
+		showDbg((u8*) "open Game Process failed: %08x", ret, 0);
 		return 0;
 	}
 	ret = svc_openProcess(&hGSPProcess, 0x14);
 	if (ret != 0) {
-		showDbg("open GSP Process failed: %08x", ret, 0);
+		showDbg((u8*) "open GSP Process failed: %08x", ret, 0);
 		goto final;
 	}
 
 	u8 buf[40];
-	xsprintf(buf, "/save_%08x_%d.rts", g_plgInfo->tid[0], id);
-	fd = sdf_open(buf, isLoad ? O_RDWR : (O_RDWR | O_CREAT));
+	xsprintf((char*) buf, "/save_%08x_%d.rts", g_plgInfo->tid[0], id);
+	fd = sdf_open((char*) buf, isLoad ? O_RDWR : (O_RDWR | O_CREAT));
 	if (fd <= 0) {
-		showDbg("open file failed: %08x", fd, 0);
+		showDbg((u8*) "open file failed: %08x", fd, 0);
 		goto final;
 	}
 
 	u32 addrIdx, regionSize, offsetInFile = 0, addr;
 	ret = loadSaveVRAM(fd, isLoad);
 	if (ret != 0) {
-		showDbg("VRAM failed: %08x", ret, 0);
+		showDbg((u8*) "VRAM failed: %08x", ret, 0);
 		goto final;
 	}
 	offsetInFile += VRAM_SIZE;
@@ -454,7 +465,7 @@ u32 instantSave(int id, int isLoad) {
 		ret = saveRegion(hGSPProcess, addr, fd, offsetInFile, VRAM_SIZE);
 	}
 	if (ret != 0) {
-		showDbg("GSP VRAM failed: %08x", ret, 0);
+		showDbg((u8*) "GSP VRAM failed: %08x", ret, 0);
 		goto final;
 	}
 	offsetInFile += VRAM_SIZE;
@@ -470,13 +481,13 @@ u32 instantSave(int id, int isLoad) {
 				ret = saveRegion(hProcess, addr, fd, offsetInFile, regionSize);
 			}
 			if (ret != 0) {
-				showDbg("region %08x failed: %08x", addr, ret);
+				showDbg((u8*) "region %08x failed: %08x", addr, ret);
 				goto final;
 			}
 		}
 		offsetInFile += regionSize;
 	}
-	showDbg(isLoad ? "Load %d OK, GamePID: %08x." : "Save %d OK, GamePID: %08x.", id, gamePid);
+	showDbg((u8*) (isLoad ? "Load %d OK, GamePID: %08x." : "Save %d OK, GamePID: %08x."), id, gamePid);
 	final:
 	if (fd > 0) {
 		sdf_close(fd);
@@ -490,14 +501,16 @@ u32 instantSave(int id, int isLoad) {
 
 u32 instantSaveMenu() {
 	if (ntrConfig->memMode != NTR_MEMMODE_DEFAULT) {
-		showMsg("RTS is not compatitable with extended memory mode.");
-		return;
+		showMsg((u8*) "RTS is not compatitable with extended memory mode.");
+		//Do nothing
+		return 0;
 	}
 	if (!image_buf) {
 		allocImageBuf();
 	}
 	if (image_buf == NULL){
-		return;
+		//Do nothing
+		return 0;
 	}
 
 	u8* entries[7];
@@ -506,14 +519,14 @@ u32 instantSaveMenu() {
 	u32 r;
 	int i;
 	for (i = 0; i < 3; i++) {
-		xsprintf(buf[i], plgTranslate("Save %d"), i);
-		xsprintf(buf[i + 3], plgTranslate("Load %d"), i);
+		xsprintf((char*) buf[i], plgTranslate("Save %d"), i);
+		xsprintf((char*) buf[i + 3], plgTranslate("Load %d"), i);
 		entries[i] = buf[i];
 		entries[i + 3] = buf[i + 3];
 	}
-	entries[6] = plgTranslate("Hint: Back to Home Menu before Load/Save.");
+	entries[6] = (u8*) plgTranslate("Hint: Back to Home Menu before Load/Save.");
 	while (1){
-		r = showMenu(plgTranslate("Instant Save"), 7, entries);
+		r = showMenu((u8*) plgTranslate("Instant Save"), 7, entries);
 		if (r == -1) {
 			break;
 		}
@@ -533,24 +546,26 @@ u32 instantSaveMenu() {
 
 
 u32 cpuClockUi() {
-	u8 buf[200];
+	//Unused
+	//u8 buf[200];
+
 	acquireVideo();
 	u8* entries[8];
 	u32 r;
-	entries[0] = plgTranslate("268MHz, L2 Disabled (Default)");
-	entries[1] = plgTranslate("804MHz, L2 Disabled");
-	entries[2] = plgTranslate("268MHz, L2 Enabled");
-	entries[3] = plgTranslate("804MHz, L2 Enabled (Best)");
+	entries[0] = (u8*) plgTranslate("268MHz, L2 Disabled (Default)");
+	entries[1] = (u8*) plgTranslate("804MHz, L2 Disabled");
+	entries[2] = (u8*) plgTranslate("268MHz, L2 Enabled");
+	entries[3] = (u8*) plgTranslate("804MHz, L2 Enabled (Best)");
 	while (1) {
 		blank(0, 0, 320, 240);
-		r = showMenu(plgTranslate("CPU Clock"), 4, entries);
+		r = showMenu((u8*) plgTranslate("CPU Clock"), 4, entries);
 		if (r == -1) {
 			break;
 		}
 		if ((r >= 0) && (r <= 3)) {
 			u32 ret = svc_kernelSetState(10, r, 0, 0);
 			if (ret != 0) {
-				showDbg("kernelSetState failed: %08x", ret, 0);
+				showDbg((u8*) "kernelSetState failed: %08x", ret, 0);
 			}
 			setCpuClockLock(r);
 			break;
@@ -566,7 +581,7 @@ void plgDoReboot() {
 	u32 ret;
 	ret = srv_getServiceHandle(NULL, &hNSS, "ns:s");
 	if (ret != 0) {
-		showDbg("open ns:s failed: %08x", ret, 0);
+		showDbg((u8*) "open ns:s failed: %08x", ret, 0);
 		return;
 	}
 	u32* cmdbuf = getThreadCommandBuffer();
@@ -587,7 +602,7 @@ void plgDoPowerOff() {
 	u32 ret;
 	ret = srv_getServiceHandle(NULL, &hNSS, "ns:s");
 	if (ret != 0) {
-		showDbg("open ns:s failed: %08x", ret, 0);
+		showDbg((u8*) "open ns:s failed: %08x", ret, 0);
 		return;
 	}
 	u32* cmdbuf = getThreadCommandBuffer();
@@ -609,10 +624,10 @@ u32 powerMenu() {
 	u8* entries[8];
 	u32 r;
 	vu32 i;
-	entries[0] = plgTranslate("Reboot");
-	entries[1] = plgTranslate("Power Off");
+	entries[0] = (u8*) plgTranslate("Reboot");
+	entries[1] = (u8*) plgTranslate("Power Off");
 	while (1) {
-		r = showMenu(plgTranslate("Power"), 2, entries);
+		r = showMenu((u8*) plgTranslate("Power"), 2, entries);
 		if (r == -1) {
 			break;
 		}
@@ -635,7 +650,7 @@ u32 powerMenu() {
 
 int GSPPid = 0x14;
 int isGSPPatchRequired = 0;
-u32 gspPatchAddr = 0;
+uintptr_t gspPatchAddr = 0;
 int bklightValue = 50;
 
 int checkBacklightSupported() {
@@ -655,7 +670,7 @@ int checkBacklightSupported() {
 		return 0;
 	}
 	gspPatchAddr = 0x0010740C;
-	copyRemoteMemory(getCurrentProcessHandle(), buf, hGSPProcess, gspPatchAddr, 16);
+	copyRemoteMemory(getCurrentProcessHandle(), buf, hGSPProcess, (void*) gspPatchAddr, 16);
 
 	if (memcmp(buf, desiredHeader, 16) == 0) {
 		goto requirePatch;
@@ -663,7 +678,7 @@ int checkBacklightSupported() {
 
 	// 11.3.0
 	gspPatchAddr = 0x0010743C;
-	copyRemoteMemory(getCurrentProcessHandle(), buf, hGSPProcess, gspPatchAddr, 16);
+	copyRemoteMemory(getCurrentProcessHandle(), buf, hGSPProcess, (void*) gspPatchAddr, 16);
 
 	if (memcmp(buf, desiredHeader, 16) == 0) {
 		goto requirePatch;
@@ -694,7 +709,10 @@ int patchGSP() {
 		return 0;
 	}
 	u32 ret;
-	Handle hGSPProcess = 0;
+
+	//Unused
+	//Handle hGSPProcess = 0;
+
 	u32 buf[4] = { 0, 0 };
 	ret = writeRemoteProcessMemory(GSPPid, gspPatchAddr + 0x68, 4, buf);
 	ret = writeRemoteProcessMemory(GSPPid, gspPatchAddr + 0xC8, 4, buf);
@@ -742,8 +760,8 @@ u32 backlightMenu() {
 	u8 buf[50];
 	while (1) {
 		blank(0, 0, 320, 240);
-		xsprintf(buf, "backlight: %d", bklightValue);
-		print(buf, 10, 10, 255, 0, 0);
+		xsprintf((char*) buf, "backlight: %d", bklightValue);
+		print((char*) buf, 10, 10, 255, 0, 0);
 		print(plgTranslate("Press Up/Down/Left/Right to adjust."), 10, 220, 0, 0, 255);
 		updateScreen();
 		u32 key = waitKey();
@@ -768,22 +786,25 @@ u32 backlightMenu() {
 
 u32 nightShiftUi() {
 	int configUpdated = 0;
-	u8 buf[200];
+
+	//Unused
+	//u8 buf[200];
+
 	acquireVideo();
 	u8* entries[11];
 	u32 r;
-	entries[0] = plgTranslate("Disabled");
-	entries[1] = plgTranslate("Reduce Blue Light Level 1");
-	entries[2] = plgTranslate("Reduce Blue Light Level 2");
-	entries[3] = plgTranslate("Reduce Blue Light Level 3");
-	entries[4] = plgTranslate("Reduce Blue Light Level 4");
-	entries[5] = plgTranslate("Reduce Blue Light Level 5");
-	entries[6] = plgTranslate("Invert Colors");
-	entries[7] = plgTranslate("Grayscale");
-	entries[8] = plgTranslate("Hint: Must be enabled before starting game. Will set CPU to L2+804MHz on New3DS.");
+	entries[0] = (u8*) plgTranslate("Disabled");
+	entries[1] = (u8*) plgTranslate("Reduce Blue Light Level 1");
+	entries[2] = (u8*) plgTranslate("Reduce Blue Light Level 2");
+	entries[3] = (u8*) plgTranslate("Reduce Blue Light Level 3");
+	entries[4] = (u8*) plgTranslate("Reduce Blue Light Level 4");
+	entries[5] = (u8*) plgTranslate("Reduce Blue Light Level 5");
+	entries[6] = (u8*) plgTranslate("Invert Colors");
+	entries[7] = (u8*) plgTranslate("Grayscale");
+	entries[8] = (u8*) plgTranslate("Hint: Must be enabled before starting game. Will set CPU to L2+804MHz on New3DS.");
 	while (1) {
 		blank(0, 0, 320, 240);
-		r = showMenu(plgTranslate("Screen Filter"), 8, entries);
+		r = showMenu((u8*) plgTranslate("Screen Filter"), 8, entries);
 		if (r == -1) {
 			break;
 
@@ -805,17 +826,18 @@ u32 nightShiftUi() {
 	}
 	return 1;
 }
+
 int screenshotMain() {
-	u32 retv;
+	//Unused
+	//u32 retv;
 
-
-	nsDbgPrint("initializing screenshot plugin\n");
+	nsDbgPrint((const char*) "initializing screenshot plugin\n");
 	plgRegisterMenuEntry(1, plgTranslate("Take Screenshot"), takeScreenShot);
 	plgRegisterMenuEntry(1, plgTranslate("Real-Time Save (Experimental)"), instantSaveMenu);
 
-	nsDbgPrint("fsUserHandle: %08x\n", fsUserHandle);
+	nsDbgPrint((const char*) "fsUserHandle: %08x\n", fsUserHandle);
 	bmp_index = get_file_index();
-	nsDbgPrint("bmp index is: %d", bmp_index);
+	nsDbgPrint((const char*) "bmp index is: %d", bmp_index);
 
 	if (ntrConfig->isNew3DS) {
 		plgRegisterMenuEntry(1, plgTranslate("CPU Clock (New3DS Only)"), cpuClockUi);
@@ -827,6 +849,8 @@ int screenshotMain() {
 
 	plgRegisterMenuEntry(1, plgTranslate("Screen Filter"), nightShiftUi);
 
+	//Does nothing.
+	return 0;
 }
 
 

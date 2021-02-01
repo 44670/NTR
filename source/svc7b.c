@@ -1,11 +1,13 @@
 #include "global.h"
 
 u32 kernelArgs[32];
-void backdoorHandler(void);
 u32 KProcessHandleDataOffset;
 u32 KProcessPIDOffset;
 u32 KProcessCodesetOffset;
 
+void backdoorHandler(void);
+void InvalidateEntireInstructionCache(void);
+void InvalidateEntireDataCache(void);
 
 void* currentBackdoorHandler = backdoorHandler;
 
@@ -15,17 +17,17 @@ u32 keRefHandle(u32 pHandleTable, u32 handle) {
 	return ptr;
 }
 
-void keDumpHandle(u32 pKProcess, u32* buf){
-	u32 pHandleTable = pKProcess + KProcessHandleDataOffset;
-
-}
+//Unused function.
+//void keDumpHandle(u32 pKProcess, u32* buf){
+//	u32 pHandleTable = pKProcess + KProcessHandleDataOffset;
+//	return;
+//}
 
 u32* translateAddress(u32 addr) {
 	if (addr < 0x1ff00000) {
-		return addr - 0x1f3f8000 + 0xfffdc000;
+		return (u32*) (addr - 0x1f3f8000 + 0xfffdc000);
 	}
 	return (u32*)(addr - 0x1ff00000 + 0xdff00000);
-
 }
 
 void set_kmmu_rw(int cpu, u32 addr, u32 size)
@@ -83,10 +85,10 @@ void set_kmmu_rw(int cpu, u32 addr, u32 size)
 }
 
 void set_remoteplay_mmu(u32 addr, u32 size) {
-	int i, j;
+	int i; // , j;
 	u32 mmu_p;
-	u32 p1, p2;
-	u32 v1, v2;
+	u32 p1; // , p2;
+	u32 v1; // , v2;
 	u32 end;
 	
 	mmu_p = 0x1f3f8000;
@@ -123,11 +125,12 @@ void keDoKernelHax() {
 	*(u32*)(ntrConfig->ControlMemoryPatchAddr2) = 0;
 
 	if (ntrConfig->KernelFreeSpaceAddr_Optional) {
-		u32* addr = ntrConfig->KernelFreeSpaceAddr_Optional;
+		volatile uintptr_t tempIntPtr = ntrConfig->KernelFreeSpaceAddr_Optional;
+		u32* addr = (u32*) tempIntPtr;
 		addr[0] = 0xe10f0000;
 		addr[1] = 0xe38000c0;
 		addr[2] = 0xe129f000;
-		rtGenerateJumpCode(kernelCallback, &addr[3]);
+		rtGenerateJumpCode((u32) kernelCallback, &addr[3]);
 		currentBackdoorHandler = (void*)(addr);
 	}
 
@@ -135,13 +138,11 @@ void keDoKernelHax() {
 	InvalidateEntireDataCache();
 }
 
-
-
 void remotePlayKernelCallback();
 
 void kernelCallback(u32 msr) {
-	typedef (*keRefHandleType)(u32, u32);
-	
+	//Unused
+	//typedef u32 (*keRefHandleType)(u32, u32);
 	//keRefHandleType keRefHandle = (keRefHandleType)0xFFF67D9C;
 	
 	u32 t = kernelArgs[0];

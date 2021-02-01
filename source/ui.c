@@ -12,7 +12,7 @@ u32 hGSPProcess = 0;
 
 
 int builtinDrawString(u8* str, int x, int y, char r, char g, char b, int newLine) {
-	int len = strlen(str);
+	int len = strlen((const char*) str);
 	int i, chWidth, currentX = x, totalLen = 0;
 
 	for (i = 0; i < len; i++) {
@@ -44,7 +44,7 @@ int drawString(u8* str, int x, int y, char r, char g, char b, int newLine) {
 }
 
 void print(char* s, int x, int y, char r, char g, char b){
-	drawString(s, x, y, r, g, b, 1);
+	drawString((u8*) s, x, y, r, g, b, 1);
 }
 
 
@@ -53,12 +53,14 @@ u32 getPhysAddr(u32 vaddr) {
 	if(vaddr >= 0x30000000 && vaddr<0x40000000)return vaddr - 0x10000000;//Only available under system-version v8.0 for certain processes, see here: http://3dbrew.org/wiki/SVC#enum_MemoryOperation
 	if(vaddr >= 0x1F000000 && vaddr<0x1F600000)return vaddr - 0x07000000;//VRAM
 
+	//TODO(Thompson): What to return??
+	return 0;
 }
 
 u32 initDirectScreenAccess() {
-	u32 outAddr, ret;
-
-	ret = protectMemory(0x1F000000, 0x600000);
+	u32 ret; //, outAddr
+	uintptr_t temp = 0x1F000000;
+	ret = protectMemory((void*) temp, 0x600000);
 	if (ret != 0) {
 		return ret;
 	}
@@ -88,6 +90,7 @@ u32 controlVideo(u32 cmd, u32 arg1, u32 arg2, u32 arg3) {
 		updateScreen();
 		return 0;
 	}
+	return 0;
 }
 
 
@@ -122,17 +125,13 @@ void updateScreen() {
 	svc_flushProcessDataCache(0xffff8001, BOTTOM_FRAME1, BOTTOM_FRAME_SIZE);
 }
 
-s32 showMenu(u8* title, u32 entryCount, u8* captions[]) {
-	return showMenuEx(title, entryCount, captions, 0, 0);
-}
-
 s32 showMenuEx(u8* title, u32 entryCount, u8* captions[], u8* descriptions[],  u32 selectOn) {
 	u32 maxCaptions = 10;
 	u32 i;
 	s32 select = 0;
 	u8 buf[200];
 	u32 pos;
-	u32 x = 10, y = 10, key = 0;
+	u32 x = 10, key = 0; //y = 10; 
 	u32 drawStart, drawEnd;
 
 	if (selectOn < entryCount) {
@@ -142,7 +141,7 @@ s32 showMenuEx(u8* title, u32 entryCount, u8* captions[], u8* descriptions[],  u
 	while(1) {
 		blank(0, 0, 320, 240);
 		pos = 10;
-		print(title, x, pos, 255, 0, 0);
+		print((char*) title, x, pos, 255, 0, 0);
 		print("http://44670.org/ntr", 10, 220, 0, 0, 255);
 		pos += 20;
 		drawStart = (select / maxCaptions) * maxCaptions;
@@ -151,14 +150,14 @@ s32 showMenuEx(u8* title, u32 entryCount, u8* captions[], u8* descriptions[],  u
 			drawEnd = entryCount;
 		}
 		for (i = drawStart; i < drawEnd; i++) {
-			strcpy(buf, (i == select) ? " * " : "   ");
-			strcat(buf, captions[i]);
-			print(buf, x, pos, 0, 0, 0);
+			strcpy((char*) buf, (i == select) ? " * " : "   ");
+			strcat((char*) buf, *((char**) captions[i]));
+			print((char*) buf, x, pos, 0, 0, 0);
 			pos += 13;
 		}
 		if (descriptions) {
 			if (descriptions[select]) {
-				print(descriptions[select], x, pos, 0, 0, 255);
+				print(*((char**) descriptions[select]), x, pos, 0, 0, 255);
 			}
 		}
 		updateScreen();
@@ -184,17 +183,21 @@ s32 showMenuEx(u8* title, u32 entryCount, u8* captions[], u8* descriptions[],  u
 	}
 }
 
+s32 showMenu(u8* title, u32 entryCount, u8* captions[]) {
+	return showMenuEx(title, entryCount, captions, 0, 0);
+}
+
 int showMsgNoPause(u8* msg) {
 	if (ShowDbgFunc) {
-		typedef void(*funcType)(char*);
+		typedef void(*funcType)(u8*);
 		((funcType)(ShowDbgFunc))(msg);
-		return 0;
 	}
+	return 0;
 }
 
 int showMsg(u8* msg) {
 	if (ShowDbgFunc) {
-		typedef void(*funcType)(char*);
+		typedef void(*funcType)(u8*);
 		((funcType)(ShowDbgFunc))(msg);
 		svc_sleepThread(1000000000);
 		return 0;
@@ -207,7 +210,7 @@ int showMsg(u8* msg) {
 
 	while(1) {
 		blank(0, 0, 320, 240);
-		print(msg, 10, 10, 255, 0, 0);
+		print((char*) msg, 10, 10, 255, 0, 0);
 		print(plgTranslate("Press [B] to close."), 10, 220, 0, 0, 255);
 		updateScreen();
 		u32 key = waitKey();
@@ -222,8 +225,8 @@ int showMsg(u8* msg) {
 void showDbg(u8* fmt, u32 v1, u32 v2) {
 	u8 buf[400];
 	
-	nsDbgPrint(fmt, v1, v2);
-	xsprintf(buf, fmt, v1, v2);
+	nsDbgPrint((const char*) fmt, v1, v2);
+	xsprintf((char*) buf, (const char*) fmt, v1, v2);
 	showMsg(buf);
 }
 

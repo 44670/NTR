@@ -31,11 +31,11 @@ void dbg(u8* key, u32 value) {
 	u8 buf[200], buf2[20];
 	u32 t = 0;
 	buf[0] = 0;
-	mystrcat(buf, "/dbg");
+	mystrcat(buf, (u8*) "/dbg");
 	mystrcat(buf, key);
 	myitoa(value, buf2);
 	mystrcat(buf, buf2);
-	FS_path testPath = (FS_path){PATH_CHAR, strlen(buf) + 1, buf};
+	FS_path testPath = (FS_path){PATH_CHAR, strlen((const char*) buf) + 1, buf};
 	FSUSER_OpenFileDirectly(fsUserHandle, &t, sdmcArchive, testPath, 7, 0);
 	if (t != 0) {
 		FSFILE_Close(t);
