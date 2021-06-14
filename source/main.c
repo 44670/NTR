@@ -6,6 +6,12 @@
 u32 nsDefaultMemRegion = 0x200;
 
 void sleep(s64 ns);
+void nsInit();
+void nsInitDebug();
+void kDoKernelHax();
+void plgShowMainMenu();
+void remotePlayMain();
+int screenshotMain();
 
 u32* threadStack = 0;
 NTR_CONFIG backupNtrConfig = { 0 };
@@ -62,7 +68,7 @@ u32 initValuesFromFIRM() {
 
 u32 initValuesFromHomeMenu() {
 	u32 t = 0;
-	u32 hProcess, ret;
+	u32 hProcess; // , ret;
 	ntrConfig->HomeMenuVersion = 0;
 	svc_openProcess(&hProcess, ntrConfig->HomeMenuPid);
 	copyRemoteMemory(CURRENT_PROCESS_HANDLE, &t, hProcess, (void*)0x00200000, 4);
@@ -99,7 +105,10 @@ u32 initValuesFromHomeMenu() {
 		ntrConfig->HomeFSUHandleAddr = 0x00278E4C;
 		ntrConfig->HomeAptStartAppletAddr = 0x00129BFC;
 	}
-final:
+
+	//Unused label.
+	//final:
+
 	svc_closeHandle(hProcess);
 	return ntrConfig->HomeMenuVersion;
 }
@@ -121,7 +130,7 @@ void setExitFlag() {
 
 void onFatalError(u32 lr) {
 acquireVideo();
-showDbg("fatal. LR: %08x", lr, 0);
+showDbg((u8*) "fatal. LR: %08x", lr, 0);
 releaseVideo();
 }
 
@@ -136,12 +145,12 @@ void viewFile(FS_archive arc, u8 * path) {
 	u32 entryCount = 0;
 
 	buf[0] = 0;
-	FS_path dirPath = (FS_path){ PATH_CHAR, strlen(path) + 1, path };
+	FS_path dirPath = (FS_path){ PATH_CHAR, strlen((const char*) path) + 1, path };
 	Handle dirHandle = 0;
 	u32 ret;
 	ret = FSUSER_OpenDirectory(fsUserHandle, &dirHandle, arc, dirPath);
 	if (ret != 0) {
-		xsprintf(buf, "FSUSER_OpenDirectory failed, ret=%08x", ret);
+		xsprintf((char*) buf, (const char*) "FSUSER_OpenDirectory failed, ret=%08x", ret);
 		showMsg(buf);
 		return;
 	}
@@ -163,7 +172,7 @@ void viewFile(FS_archive arc, u8 * path) {
 		entryCount += 1;
 	}
 	if (entryCount == 0) {
-		showMsg("no file found.");
+		showMsg((u8*) "no file found.");
 		return;
 	}
 	while (1) {
@@ -171,7 +180,7 @@ void viewFile(FS_archive arc, u8 * path) {
 		if (r == -1) {
 			break;
 		}
-		xsprintf((u8*)entry, "%s%s", path, captions[r]);
+		xsprintf((char*) entry, (const char*) "%s%s", path, captions[r]);
 		viewFile(arc, (u8*)entry);
 	}
 	FSDIR_Close(dirHandle);
@@ -184,11 +193,11 @@ void fileManager() {
 	arc = (FS_archive){ 0x567890AB, (FS_path){ PATH_EMPTY, 1, (u8*)"" } };
 	u32 ret = FSUSER_OpenArchive(fsUserHandle, &arc);
 	if (ret != 0) {
-		xsprintf(buf, "openArchive failed, ret=%08x", ret);
+		xsprintf((char*) buf, (const char*) "openArchive failed, ret=%08x", ret);
 		showMsg(buf);
 		return;
 	}
-	viewFile(arc, "/");
+	viewFile(arc, (u8*) "/");
 	FSUSER_CloseArchive(fsUserHandle, &arc);
 }
 
@@ -205,7 +214,7 @@ u32 HomeFSReadCallback(u32 a1, u32 a2, u32 a3, u32 a4, u32 buffer, u32 size) {
 	ret = ((FSReadTypeDef)((void*)HomeFSReadHook.callCode))(a1, a2, a3, a4, buffer, size);
 	if (size == 0x36C0) {
 		if ((*((u32*)(buffer))) == 0x48444d53) { // 'SMDH'
-			nsDbgPrint("patching smdh\n");
+			nsDbgPrint((const char*) "patching smdh\n");
 			*((u32*)(buffer + 0x2018)) = 0x7fffffff;
 		}
 	}
@@ -221,7 +230,7 @@ u32 isFileExist(char* fileName) {
 	Handle hFile = 0;
 	u32 ret;
 
-	FS_path testPath = (FS_path){ PATH_CHAR, strlen(fileName) + 1, fileName };
+	FS_path testPath = (FS_path){ PATH_CHAR, strlen((const char*) fileName) + 1, (u8*) fileName };
 	ret = FSUSER_OpenFileDirectly(fsUserHandle, &hFile, sdmcArchive, testPath, 1, 0);
 	if (ret != 0) {
 		return 0;
@@ -239,10 +248,12 @@ void magicKillProcess(u32 pid) {
 	}
 	u32 KProcess = kGetKProcessByHandle(hProcess);
 	u32 t = 0;
-	kmemcpy(&t, KProcess + 4, 4);
-	//showDbg("refcount: %08x", t, 0);
+	kmemcpy(&t, (void*) (KProcess + 4), 4);
+	//showDbg((u8*) "refcount: %08x", t, 0);
 	t = 1;
-	kmemcpy(KProcess + 4, &t, 4);
+	volatile uintptr_t temp = (KProcess + 4);
+	void* vPtr = (void*) temp;
+	kmemcpy(vPtr, &t, 4);
 	svc_closeHandle(hProcess);
 }
 
@@ -275,9 +286,11 @@ u32 HomeSetMemorySizeCallback(u32 size) {
 }
 
 void threadStart() {
-	volatile vu32* ptr;
-	Handle testFileHandle = 0;
-	u32 i, ret;
+	//Unused
+	//volatile vu32* ptr;
+	//Handle testFileHandle = 0;
+
+	u32 ret; // , i;
 	int waitCnt = 0;
 
 	rtInitHook(&HomeFSReadHook, ntrConfig->HomeFSReadAddr, (u32)HomeFSReadCallback);
@@ -336,7 +349,7 @@ void initConfigureMemory() {
 
 		ret = svc_controlMemory(&outAddr, NS_CONFIGURE_ADDR, 0, 0x1000, 3, 3);
 		if (ret != 0) {
-			showMsg("init cfg memory failed");
+			showMsg((u8*) "init cfg memory failed");
 			return; 
 		}
 		
@@ -367,7 +380,8 @@ void injectToHomeMenu() {
 	Handle hProcess = 0;
 	svc_openProcess(&hProcess, ntrConfig->HomeMenuPid);
 
-	u32* bootArgs = arm11BinStart + 4;
+	volatile uintptr_t temp = (arm11BinStart + 4);
+	u32* bootArgs = (u32*) temp; 
 	bootArgs[0] = 1;
 
 	nsAttachProcess(hProcess, ntrConfig->HomeMenuInjectAddr, &cfg, 1);
@@ -452,7 +466,7 @@ void initFromSoc() {
 
 int main() {
 	StartMode = _BootArgs[0];
-	//showDbg("", 0, sizeof(NS_CONFIG));
+	//showDbg((u8*) "", 0, sizeof(NS_CONFIG));
 	if (StartMode == 0) {
 		// load from bootNTR
 		if (_BootArgs[1] == 0xb00d) {
@@ -465,18 +479,19 @@ int main() {
 
 
 		if ((ntrConfig->HomeMenuVersion == 0) || (ntrConfig->firmVersion == 0)) {
-			showMsg("firmware or homemenu version not supported");
-			dumpCode(0xdff80000, 0x80000, "/axiwram.dmp");
+			showMsg((u8*) "firmware or homemenu version not supported");
+			dumpCode(0xdff80000, 0x80000, (u8*) "/axiwram.dmp");
 			svc_sleepThread(1000000000);
-			dumpRemoteProcess(0, "/pid0.dmp", 0x00100000);
-			dumpRemoteProcess(2, "/pid2.dmp", 0x00100000);
-			dumpRemoteProcess(3, "/pid3.dmp", 0x00100000);
-			dumpRemoteProcess(0xf, "/pidf.dmp", 0x00100000);
-			showMsg("current firmware not supported. \n"
+			dumpRemoteProcess(0, (u8*) "/pid0.dmp", 0x00100000);
+			dumpRemoteProcess(2, (u8*) "/pid2.dmp", 0x00100000);
+			dumpRemoteProcess(3, (u8*) "/pid3.dmp", 0x00100000);
+			dumpRemoteProcess(0xf, (u8*) "/pidf.dmp", 0x00100000);
+			showMsg((u8*) "current firmware not supported. \n"
 					"please send feedback to\n"
 					" cell9@yandex.com.");
-			u32 kversion = *(unsigned int *)0x1FF80000;
-			showDbg("kversion: %08x", kversion, 0);
+			volatile uintptr_t temp = 0x1FF80000;
+			u32 kversion = *(u32*) temp;
+			showDbg((u8*) "kversion: %08x", kversion, 0);
 
 			if ((_BootArgs[1] != 0xb00d)) {
 				while (1) {
@@ -487,12 +502,12 @@ int main() {
 			return 0;
 
 		}	else {
-			showMsg("do kernelhax");
+			showMsg((u8*) "do kernelhax");
 			kDoKernelHax();
-			showMsg("kernelhax done");
+			showMsg((u8*) "kernelhax done");
 			doSomethingInitSrv();
 			disp(100, 0x1ff0000);
-			showDbg("homemenu ver: %08x", ntrConfig->HomeMenuVersion, 0);
+			showDbg((u8*) "homemenu ver: %08x", ntrConfig->HomeMenuVersion, 0);
 			injectToHomeMenu();
 		}
 		
